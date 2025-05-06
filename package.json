@@ -7,8 +7,7 @@
     "build": "rimraf dist && tsc",
     "prestart": "npm run build",
     "start": "node dist/index.js",
-    "predev": "npm run build",
-    "dev": "concurrently \"tsc -w\" \"nodemon dist/index.js\""
+    "dev": "npx nodemon stage/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -20,10 +19,18 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
+    "bcryptjs": "^3.0.2",
     "concurrently": "^9.1.2",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-async-errors": "^2.1.0",
+    "http-status-codes": "^2.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.16.0",
     "mongoose": "^8.14.0",
-    "node": "^22.15.0",
-    "rimraf": "^6.0.1"
+    "node": "22.11.0",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2"
   }
 }
