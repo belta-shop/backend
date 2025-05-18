@@ -1,23 +1,39 @@
-import nodemailer from "nodemailer";
+import nodemailer, { SendMailOptions } from "nodemailer";
+import ErrorAPI from "../errors/error-api";
+import { StatusCodes } from "http-status-codes";
+import { DEFAULT_LANGUAGE } from "../config/global";
 
-// Create a test account or replace with real credentials.
-const transport = nodemailer.createTransport({
-  host: "live.smtp.mailtrap.io",
-  port: 587,
+const { NODEMAILER_USER, NODEMAILER_PASS, NODEMAILER_SENDER_EMAIL } =
+  process.env;
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
   auth: {
-    user: "api",
-    pass: "f5aadbad0b49a2e3fe9e99a17d12f863",
+    user: NODEMAILER_USER,
+    pass: NODEMAILER_PASS,
   },
 });
 
-// Wrap in an async IIFE so we can use await.
-export async function sendMail() {
-  const info = await transport.sendMail({
-    from: "demomailtrap.co",
-    to: "justbeltagy@gmail.com",
-    subject: "Hello ✔",
-    text: "Hello world?",
-  });
+export async function sendMail(options: Omit<SendMailOptions, "from">) {
+  transporter.sendMail(
+    { from: NODEMAILER_SENDER_EMAIL, ...options },
+    function (error, info) {
+      if (error) {
+        throw new ErrorAPI(error.message, StatusCodes.BAD_GATEWAY);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    }
+  );
+}
 
-  console.log("Message sent:", info.messageId);
+export async function sendOTP(
+  receiver: string,
+  otp: string,
+  locale = DEFAULT_LANGUAGE
+) {
+  await sendMail({
+    to: receiver,
+    subject: "otp",
+  });
 }
