@@ -1,7 +1,5 @@
 import { model, Schema } from "mongoose";
-
-const emailRegex =
-  /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+import { emailRegex } from "../config/regex";
 
 const UserSchema = new Schema({
   fullName: {
@@ -13,7 +11,9 @@ const UserSchema = new Schema({
     type: String,
     required: [true, "Email is required"],
     match: [emailRegex, "Please enter a valid email"],
-    unique: [true, "duplicate_email_error"],
+    index: {
+      unique: [true, "duplicate_email_error"],
+    },
   },
   confirmed: {
     type: Boolean,

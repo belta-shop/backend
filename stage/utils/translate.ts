@@ -9,7 +9,13 @@ const getLang = (name?: string): Language =>
     ? (name as Language)
     : DEFAULT_LANGUAGE;
 
-export const t = (name: string, language?: string) => {
+export const t = (
+  name: string,
+  language?: string,
+  args?: Record<string, string>
+) => {
+  if (typeof name !== "string") return name;
+
   const pack = languagePacks[getLang(language)];
 
   const path = name.split(".");
@@ -21,6 +27,13 @@ export const t = (name: string, language?: string) => {
       return name;
     }
     current = current[part];
+  }
+
+  if (args) {
+    current = current.replace(
+      /\{\{([^}]+)\}\}/g,
+      (match: string, p1: string) => args[p1] || match
+    );
   }
 
   return current;

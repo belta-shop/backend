@@ -1,7 +1,8 @@
 import nodemailer, { SendMailOptions } from "nodemailer";
 import ErrorAPI from "../errors/error-api";
 import { StatusCodes } from "http-status-codes";
-import { DEFAULT_LANGUAGE } from "../config/global";
+import { OTPPurpose } from "../types/otp";
+import { t } from "./translate";
 
 const { NODEMAILER_USER, NODEMAILER_PASS, NODEMAILER_SENDER_EMAIL } =
   process.env;
@@ -14,7 +15,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendMail(options: Omit<SendMailOptions, "from">) {
+export function sendMail(options: Omit<SendMailOptions, "from">) {
   transporter.sendMail(
     { from: NODEMAILER_SENDER_EMAIL, ...options },
     function (error, info) {
@@ -27,13 +28,22 @@ export async function sendMail(options: Omit<SendMailOptions, "from">) {
   );
 }
 
-export async function sendOTP(
-  receiver: string,
-  otp: string,
-  locale = DEFAULT_LANGUAGE
-) {
-  await sendMail({
+export function sendOTPMail({
+  receiver,
+  otp,
+  name,
+  lang,
+  purpose,
+}: {
+  receiver: string;
+  otp: string;
+  name: string;
+  lang: string | undefined;
+  purpose: OTPPurpose;
+}) {
+  sendMail({
     to: receiver,
-    subject: "otp",
+    subject: t(`Email.OTP.${purpose}_subject`, lang),
+    html: t(`Email.OTP.${purpose}_body`, lang, { name, otp }),
   });
 }

@@ -12,3 +12,9 @@ export function comparePassowrd(
 ) {
   return bcrypt.compareSync(regularPassword, hashedPassword);
 }
+
+export function genOTP() {
+  return Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0");
+}

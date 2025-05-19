@@ -3,16 +3,40 @@ import User from "../models/user.model";
 import { StatusCodes } from "http-status-codes";
 import { MongooseError } from "mongoose";
 import ErrorAPI from "../errors/error-api";
-import { comparePassowrd, hashPaswword } from "../utils/bcrypt";
+import { comparePassowrd, genOTP, hashPaswword } from "../utils/bcrypt";
 import { signToken, verifyUserToken } from "../utils/jwt";
+import OTP from "../models/otp.model";
+import { allOtpPurposes, OTP_EXPIRE_TIME, OTPPurpose } from "../types/otp";
+import BadRequest from "../errors/bad-request";
+import { sendOtp } from "../utils/otp";
+import { sendOTPMail } from "../utils/email";
 
 export const register = async (req: Request, res: Response) => {
   try {
+    // Create User
     const hashed = hashPaswword(req.body.password);
-
     await User.create({
       ...req.body,
       password: hashed,
+    });
+
+    // Create OTP
+    const otpValue = genOTP();
+    await OTP.create({
+      email: req.body.email,
+      value: otpValue,
+      purpose: OTPPurpose.Register,
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"],
+    });
+
+    // Send OTP
+    sendOTPMail({
+      receiver: req.body.email,
+      otp: otpValue,
+      name: req.body.fullName,
+      lang: req.headers["accept-language"],
+      purpose: OTPPurpose.Register,
     });
 
     res
@@ -96,4 +120,50 @@ export const refreshAccessToken = async (
   );
 
   res.status(StatusCodes.CREATED).json({ accessToken, refreshToken });
+};
+
+export const resendOTP = async (req: Request, res: Response) => {
+  const { email, purpose } = req.body;
+
+  await sendOtp({
+    email,
+    purpose,
+    ip: req.ip,
+    userAgent: req.headers["user-agent"],
+    lang: req.headers["accept-language"],
+  });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+  });
+};
+
+export const verifyOTP = async (req: Request, res: Response) => {
+  const { email, otp, purpose } = req.body;
+
+  if (!email || !otp || !purpose)
+    throw new BadRequest("email, otp and purpose are required");
+
+  if (!allOtpPurposes.includes(purpose as any))
+    throw new BadRequest(
+      `pupose should be one of [ ${allOtpPurposes.join(", ")} ]`
+    );
+
+  const otpDoc = await OTP.findOne({ email });
+  if (
+    !otpDoc ||
+    otp !== otpDoc.value ||
+    req.ip !== otpDoc.ipAddress ||
+    req.headers["user-agent"] !== otpDoc.userAgent ||
+    purpose !== otpDoc.purpose
+  )
+    throw new ErrorAPI("invalid_otp", StatusCodes.UNAUTHORIZED);
+
+  await OTP.deleteOne({ email });
+
+  await User.updateOne({ email }, { confirmed: true });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+  });
 };

@@ -1,4 +1,15 @@
 {
-  "duplicate_email_error": "Email already exists",
-  "invalid_email_or_password": "Invalid Email or Password"
+  "Error": {
+    "duplicate_email_error": "Email already exists.",
+    "invalid_email_or_password": "Invalid Email or Password.",
+    "no_user_with_email": "No user found with this email.",
+    "invalid_otp": "The provided OTP is incorrect or expired.",
+    "email_already_confirmed": "This email is already verified. No further action is needed."
+  },
+  "Email": {
+    "OTP": {
+      "register_subject": "BeltaShop: Verify your email address",
+      "register_body": "<div dir='ltr'><h3>Hello {{name}},</h3><p>Thank you for registering with BeltaShop. Please verify your email address by entering the following OTP:</p><h2>{{otp}}</h2><p>This OTP will expire in 10 minutes.</p><p>Best regards,<br>BeltaShop Team</p></div>"
+    }
+  }
 }
