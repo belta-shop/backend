@@ -1,8 +1,7 @@
-export default class ErrorAPI extends Error {
-  status: number;
+import CustomError from "./custom-error";
 
+export default class ErrorAPI extends CustomError {
   constructor(message: string, status: number) {
-    super(message);
-    this.status = status;
+    super(message, status);
   }
 }

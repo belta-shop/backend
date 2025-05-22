@@ -3,7 +3,7 @@ import ErrorAPI from "../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 import { t } from "../utils/translate";
 import { MongooseError } from "mongoose";
-import BadRequest from "../errors/bad-request";
+import CustomError from "../errors/custom-error";
 
 export const ErrorHandler = async (
   error: Error,
@@ -16,21 +16,15 @@ export const ErrorHandler = async (
     code: StatusCodes.INTERNAL_SERVER_ERROR,
   };
 
-  if (error instanceof ErrorAPI) {
-    customError.code = error.status;
-    customError.msg = t(
-      `Error.${error.message}`,
-      req.headers["accept-language"]
-    );
-  }
-  if (error instanceof BadRequest) customError.code = error.status;
-  if (error instanceof MongooseError) {
+  if (error instanceof CustomError) customError.code = error.status;
+  if (error instanceof MongooseError)
     customError.code = StatusCodes.BAD_REQUEST;
+
+  if (error instanceof ErrorAPI || error instanceof MongooseError)
     customError.msg = t(
       `Error.${error.message}`,
       req.headers["accept-language"]
     );
-  }
 
   res.status(customError.code).json({ error: customError.msg });
 };
