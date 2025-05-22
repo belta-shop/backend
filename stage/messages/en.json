@@ -4,7 +4,8 @@
     "invalid_email_or_password": "Invalid Email or Password.",
     "no_user_with_email": "No user found with this email.",
     "invalid_otp": "The provided OTP is incorrect or expired.",
-    "email_already_confirmed": "This email is already verified. No further action is needed."
+    "email_already_confirmed": "This email is already verified. No further action is needed.",
+    "same_password": "The new password cannot be the same as your current password."
   },
   "Email": {
     "OTP": {

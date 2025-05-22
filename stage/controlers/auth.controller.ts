@@ -167,3 +167,23 @@ export const verifyOTP = async (req: Request, res: Response) => {
     success: true,
   });
 };
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !password)
+    throw new BadRequest("email and password are required");
+
+  const user = await User.findOne({ email });
+  if (!user) throw new ErrorAPI("no_user_with_email", StatusCodes.NOT_FOUND);
+
+  if (comparePassowrd(password, user.password))
+    throw new ErrorAPI("same_password", StatusCodes.CONFLICT);
+
+  const hashed = hashPaswword(req.body.password);
+  await User.updateOne({ email }, { password: hashed });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+  });
+};
