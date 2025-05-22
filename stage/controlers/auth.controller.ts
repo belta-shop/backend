@@ -10,6 +10,8 @@ import { allOtpPurposes, OTP_EXPIRE_TIME, OTPPurpose } from "../types/otp";
 import BadRequest from "../errors/bad-request";
 import { sendOtp } from "../utils/otp";
 import { sendOTPMail } from "../utils/email";
+import Unauthorized from "../errors/unauthorized";
+import CustomError from "../errors/custom-error";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -122,8 +124,13 @@ export const refreshAccessToken = async (
   res.status(StatusCodes.CREATED).json({ accessToken, refreshToken });
 };
 
-export const resendOTP = async (req: Request, res: Response) => {
-  const { email, purpose } = req.body;
+export const resendOTP = async (
+  req: Request<{}, {}, { purpose: OTPPurpose }>,
+  res: Response
+) => {
+  if (!req.currentUser) throw new Unauthorized();
+  const { email } = req.currentUser;
+  const { purpose } = req.body;
 
   await sendOtp({
     email,
@@ -138,8 +145,13 @@ export const resendOTP = async (req: Request, res: Response) => {
   });
 };
 
-export const verifyOTP = async (req: Request, res: Response) => {
-  const { email, otp, purpose } = req.body;
+export const verifyOTP = async (
+  req: Request<{}, {}, { otp: string; purpose: OTPPurpose }>,
+  res: Response
+) => {
+  if (!req.currentUser) throw new Unauthorized();
+  const { sub, email, role } = req.currentUser;
+  const { otp, purpose } = req.body;
 
   if (!email || !otp || !purpose)
     throw new BadRequest("email, otp and purpose are required");
@@ -161,21 +173,39 @@ export const verifyOTP = async (req: Request, res: Response) => {
 
   await OTP.deleteOne({ email });
 
-  await User.updateOne({ email }, { confirmed: true });
-
+  if (purpose === OTPPurpose.Register) {
+    await User.updateOne({ email }, { confirmed: true });
+  } else if (purpose === OTPPurpose.ResetPassword) {
+    const resetPasswordToken = signToken(
+      { sub, email, role, purpose },
+      {
+        expiresIn: "15m",
+      }
+    );
+    res.status(StatusCodes.OK).json({
+      success: true,
+      resetPasswordToken,
+    });
+  }
   res.status(StatusCodes.OK).json({
     success: true,
   });
 };
 
 export const resetPassword = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  if (!req.currentUser) throw new Unauthorized();
 
-  if (!email || !password)
-    throw new BadRequest("email and password are required");
+  const { email, purpose } = req.currentUser;
+
+  const { password } = req.body;
+
+  if (!password) throw new BadRequest("password is required");
+
+  if (purpose !== OTPPurpose.ResetPassword)
+    throw new CustomError("invalid token", StatusCodes.FORBIDDEN);
 
   const user = await User.findOne({ email });
-  if (!user) throw new ErrorAPI("no_user_with_email", StatusCodes.NOT_FOUND);
+  if (!user) throw new CustomError("invalid token", StatusCodes.FORBIDDEN);
 
   if (comparePassowrd(password, user.password))
     throw new ErrorAPI("same_password", StatusCodes.CONFLICT);
