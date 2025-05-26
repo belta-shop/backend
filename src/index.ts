@@ -5,23 +5,39 @@ import { connectDb } from "./db/connect";
 import { authRouter } from "./routes";
 import { ErrorHandler } from "./middleware/error-handler";
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5006;
 
 app.set("trust proxy", true);
 app.use(express.json());
 
 app.use("/auth", authRouter);
 
+app.get("/", (_, req) => {
+  req.status(200).end("<body><h1>Welcome to Belta Shop!</h1></body>");
+});
+
 // error handler
 app.use(ErrorHandler);
 
-(async function start() {
+async function start() {
   try {
     await connectDb(process.env.MONGO_URI!);
-    app.listen(port, () => {
+    return app.listen(port, () => {
       console.log(`Server is listening on port ${port}`);
     });
   } catch (error) {
     console.log(error);
   }
-})();
+}
+
+const server = start();
+
+process.on("SIGTERM", async () => {
+  console.log("SIGTERM signal received: gracefully shutting down");
+  const s = await server;
+  if (s) {
+    s.close(() => {
+      console.log("HTTP server closed");
+    });
+  }
+});
