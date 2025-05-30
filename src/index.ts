@@ -4,12 +4,14 @@ import "express-async-errors";
 import { connectDb } from "./db/connect";
 import { authRouter } from "./routes";
 import { ErrorHandler } from "./middleware/error-handler";
+import cors from "cors";
+
 const app = express();
 const port = process.env.PORT || 5006;
 
 app.set("trust proxy", true);
 app.use(express.json());
-
+app.use(cors());
 app.use("/auth", authRouter);
 
 app.get("/", (_, req) => {

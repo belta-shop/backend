@@ -19,12 +19,14 @@
     "nodemon": "^3.1.10"
   },
   "dependencies": {
+    "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.15.21",
     "@types/nodemailer": "^6.4.17",
     "bcryptjs": "^3.0.2",
     "concurrently": "^9.1.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-async-errors": "^2.1.0",
