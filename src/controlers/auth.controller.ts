@@ -6,7 +6,7 @@ import ErrorAPI from "../errors/error-api";
 import { comparePassowrd, genOTP, hashPaswword } from "../utils/bcrypt";
 import { signToken, verifyUserToken } from "../utils/jwt";
 import OTP from "../models/otp.model";
-import { allOtpPurposes, OTP_EXPIRE_TIME, OTPPurpose } from "../types/otp";
+import { allOtpPurposes, OTPPurpose } from "../types/otp";
 import BadRequest from "../errors/bad-request";
 import { sendOtp } from "../utils/otp";
 import { sendOTPMail } from "../utils/email";
@@ -94,7 +94,9 @@ export const login = async (
         confirmed,
         role,
         accessToken,
+        accessTokenExpireDate: new Date(Date.now() + 15 * 60 * 1000),
         refreshToken,
+        refreshTokenExpireDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       };
 
       res.status(StatusCodes.OK).json(body);
