@@ -123,7 +123,12 @@ export const refreshAccessToken = async (
     }
   );
 
-  res.status(StatusCodes.CREATED).json({ accessToken, refreshToken });
+  res.status(StatusCodes.CREATED).json({
+    accessToken,
+    accessTokenExpireDate: new Date(Date.now() + 15 * 60 * 1000),
+    refreshToken,
+    refreshTokenExpireDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
 };
 
 export const resendOTP = async (
