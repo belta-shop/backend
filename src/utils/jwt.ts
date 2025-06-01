@@ -29,9 +29,9 @@ export async function verifyUserToken(token: string) {
 
   const { sub: id, email, role } = payload;
 
-  const user = await User.findById(id);
+  const user = await User.findById(id).select("-password");
   if (!user || user.email !== email || user.role !== role)
     throw new Unauthorized();
 
-  return payload;
+  return { ...payload, user };
 }

@@ -108,7 +108,7 @@ export const refreshAccessToken = async (
   req: Request<{}, {}, { token: string }>,
   res: Response
 ) => {
-  const { sub, email, role } = await verifyUserToken(req.body.token);
+  const { sub, email, role, user } = await verifyUserToken(req.body.token);
 
   const accessToken = signToken(
     { sub, email, role },
@@ -123,12 +123,21 @@ export const refreshAccessToken = async (
     }
   );
 
-  res.status(StatusCodes.CREATED).json({
+  const { _id: id, fullName, confirmed } = user;
+
+  const body = {
+    id,
+    fullName,
+    email,
+    confirmed,
+    role,
     accessToken,
     accessTokenExpireDate: new Date(Date.now() + 15 * 60 * 1000),
     refreshToken,
     refreshTokenExpireDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  });
+  };
+
+  res.status(StatusCodes.CREATED).json(body);
 };
 
 export const resendOTP = async (
