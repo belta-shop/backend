@@ -14,46 +14,37 @@ import Unauthorized from "../errors/unauthorized";
 import CustomError from "../errors/custom-error";
 
 export const register = async (req: Request, res: Response) => {
-  try {
-    // Create User
-    const hashed = hashPaswword(req.body.password);
-    await User.create({
-      ...req.body,
-      password: hashed,
-    });
+  // Create User
+  const hashed = hashPaswword(req.body.password);
+  await User.create({
+    ...req.body,
+    password: hashed,
+  });
 
-    // Create OTP
-    const otpValue = genOTP();
-    await OTP.create({
-      email: req.body.email,
-      value: otpValue,
-      purpose: OTPPurpose.Register,
-      ipAddress: req.ip,
-      userAgent: req.headers["user-agent"],
-    });
+  // Create OTP
+  const otpValue = genOTP();
+  await OTP.create({
+    email: req.body.email,
+    value: otpValue,
+    purpose: OTPPurpose.Register,
+    ipAddress: req.ip,
+    userAgent: req.headers["user-agent"],
+  });
 
-    // Send OTP
-    sendOTPMail({
-      receiver: req.body.email,
-      otp: otpValue,
-      name: req.body.fullName,
-      lang: req.headers["accept-language"],
-      purpose: OTPPurpose.Register,
-    });
+  // Send OTP
+  sendOTPMail({
+    receiver: req.body.email,
+    otp: otpValue,
+    name: req.body.fullName,
+    lang: req.headers["accept-language"],
+    purpose: OTPPurpose.Register,
+  });
 
-    res
-      .json({
-        success: true,
-      })
-      .status(StatusCodes.CREATED);
-  } catch (error) {
-    if (
-      error instanceof MongooseError &&
-      error.message === "duplicate_email_error"
-    ) {
-      throw new ErrorAPI(error.message, StatusCodes.CONFLICT);
-    } else throw Error;
-  }
+  res
+    .json({
+      success: true,
+    })
+    .status(StatusCodes.CREATED);
 };
 
 export const login = async (
