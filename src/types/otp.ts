@@ -1,9 +1,9 @@
 export const enum OTPPurpose {
-  Register = "register",
+  EmailConfirmation = "email_confirmation",
   ResetPassword = "reset_password",
 }
 export const allOtpPurposes: OTPPurpose[] = [
-  OTPPurpose.Register,
+  OTPPurpose.EmailConfirmation,
   OTPPurpose.ResetPassword,
 ];
 

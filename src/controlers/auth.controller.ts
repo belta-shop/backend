@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import User from "../models/user.model";
 import { StatusCodes } from "http-status-codes";
-import { MongooseError } from "mongoose";
 import ErrorAPI from "../errors/error-api";
 import { comparePassowrd, genOTP, hashPaswword } from "../utils/bcrypt";
 import { signToken, verifyUserToken } from "../utils/jwt";
@@ -19,25 +18,6 @@ export const register = async (req: Request, res: Response) => {
   await User.create({
     ...req.body,
     password: hashed,
-  });
-
-  // Create OTP
-  const otpValue = genOTP();
-  await OTP.create({
-    email: req.body.email,
-    value: otpValue,
-    purpose: OTPPurpose.Register,
-    ipAddress: req.ip,
-    userAgent: req.headers["user-agent"],
-  });
-
-  // Send OTP
-  sendOTPMail({
-    receiver: req.body.email,
-    otp: otpValue,
-    name: req.body.fullName,
-    lang: req.headers["accept-language"],
-    purpose: OTPPurpose.Register,
   });
 
   res
@@ -77,6 +57,27 @@ export const login = async (
           expiresIn: "1w",
         }
       );
+
+      if (!confirmed) {
+        // Create OTP
+        const otpValue = genOTP();
+        await OTP.create({
+          email: req.body.email,
+          value: otpValue,
+          purpose: OTPPurpose.EmailConfirmation,
+          ipAddress: req.ip,
+          userAgent: req.headers["user-agent"],
+        });
+
+        // Send OTP
+        sendOTPMail({
+          receiver: email,
+          otp: otpValue,
+          name: fullName,
+          lang: req.headers["accept-language"],
+          purpose: OTPPurpose.EmailConfirmation,
+        });
+      }
 
       const body = {
         id,
@@ -180,7 +181,7 @@ export const verifyOTP = async (
 
   await OTP.deleteOne({ email });
 
-  if (purpose === OTPPurpose.Register) {
+  if (purpose === OTPPurpose.EmailConfirmation) {
     await User.updateOne({ email }, { confirmed: true });
   } else if (purpose === OTPPurpose.ResetPassword) {
     const resetPasswordToken = signToken(
