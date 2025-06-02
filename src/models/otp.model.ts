@@ -15,7 +15,7 @@ const OtpSchema = new Schema({
   },
   purpose: {
     type: String,
-    enum: [OTPPurpose.Register],
+    enum: [OTPPurpose.EmailConfirmation, OTPPurpose.ResetPassword],
   },
   userAgent: String,
   ipAddress: String,
