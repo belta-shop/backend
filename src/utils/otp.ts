@@ -28,7 +28,7 @@ export async function sendOtp({
   const user = await User.findOne({ email });
   if (!user) throw new ErrorAPI("no_user_with_email", StatusCodes.NOT_FOUND);
 
-  if (purpose === OTPPurpose.Register && user.confirmed)
+  if (purpose === OTPPurpose.EmailConfirmation && user.confirmed)
     throw new ErrorAPI("email_already_confirmed", StatusCodes.CONFLICT);
 
   // Create OTP
