@@ -1,6 +1,7 @@
 import { model, Schema } from "mongoose";
 import { emailRegex } from "../config/regex";
-import { OTP_EXPIRE_TIME, OTPPurpose } from "../types/otp";
+import { OTPPurpose } from "../types/otp";
+import { OTP_EXPIRE_TIME } from "../config/global";
 
 const OtpSchema = new Schema({
   email: {

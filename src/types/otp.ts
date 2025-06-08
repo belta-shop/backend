@@ -6,5 +6,3 @@ export const allOtpPurposes: OTPPurpose[] = [
   OTPPurpose.EmailConfirmation,
   OTPPurpose.ResetPassword,
 ];
-
-export const OTP_EXPIRE_TIME = 10 * 60 * 1000;

@@ -3,7 +3,12 @@ import User from "../models/user.model";
 import { StatusCodes } from "http-status-codes";
 import ErrorAPI from "../errors/error-api";
 import { comparePassowrd, genOTP, hashPaswword } from "../utils/bcrypt";
-import { signToken, verifyUserToken } from "../utils/jwt";
+import {
+  signAccessToken,
+  signRefreshToken,
+  signToken,
+  verifyUserToken,
+} from "../utils/jwt";
 import OTP from "../models/otp.model";
 import { allOtpPurposes, OTPPurpose } from "../types/otp";
 import BadRequest from "../errors/bad-request";
@@ -11,6 +16,7 @@ import { sendOtp } from "../utils/otp";
 import { sendOTPMail } from "../utils/email";
 import Unauthorized from "../errors/unauthorized";
 import CustomError from "../errors/custom-error";
+import Token from "../models/token.model";
 
 export const register = async (req: Request, res: Response) => {
   // Create User
@@ -45,18 +51,12 @@ export const login = async (
     } else {
       const { _id: id, fullName, email, confirmed, role } = user;
 
-      const accessToken = signToken(
-        { sub: id, email, role },
-        {
-          expiresIn: "15m",
-        }
-      );
-      const refreshToken = signToken(
-        { sub: id, email, role },
-        {
-          expiresIn: "1w",
-        }
-      );
+      const accessToken = signAccessToken({ id: id.toString(), email, role });
+      const refreshToken = await signRefreshToken({
+        id: id.toString(),
+        email,
+        role,
+      });
 
       if (!confirmed) {
         // Create OTP
@@ -100,20 +100,16 @@ export const refreshAccessToken = async (
   req: Request<{}, {}, { token: string }>,
   res: Response
 ) => {
-  const { sub, email, role, user } = await verifyUserToken(req.body.token);
+  const { sub, tokenId, email, role, user } = await verifyUserToken(
+    req.body.token
+  );
 
-  const accessToken = signToken(
-    { sub, email, role },
-    {
-      expiresIn: "15m",
-    }
-  );
-  const refreshToken = signToken(
-    { sub, email, role },
-    {
-      expiresIn: "1w",
-    }
-  );
+  if (!tokenId) throw new Unauthorized();
+
+  await Token.deleteOne({ uuid: tokenId });
+
+  const accessToken = signAccessToken({ id: sub, email, role });
+  const refreshToken = await signRefreshToken({ id: sub, email, role });
 
   const { _id: id, fullName, confirmed } = user;
 

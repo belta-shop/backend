@@ -2,10 +2,11 @@ import { StatusCodes } from "http-status-codes";
 import BadRequest from "../errors/bad-request";
 import ErrorAPI from "../errors/error-api";
 import User from "../models/user.model";
-import { allOtpPurposes, OTP_EXPIRE_TIME, OTPPurpose } from "../types/otp";
+import { allOtpPurposes, OTPPurpose } from "../types/otp";
 import { genOTP } from "./bcrypt";
 import OTP from "../models/otp.model";
 import { sendOTPMail } from "./email";
+import { OTP_EXPIRE_TIME } from "../config/global";
 
 export async function sendOtp({
   email,

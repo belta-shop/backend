@@ -12,6 +12,9 @@ export const authMiddleware = async (
 
   const payload = await verifyUserToken(token);
 
+  // prevent refresh token from being used as access token
+  if (typeof payload.tokenId === "string") throw new Unauthorized();
+
   req.currentUser = payload;
 
   next();
