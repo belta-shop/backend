@@ -27,7 +27,7 @@ const UserSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ["client", "seller", "admin"],
+    enum: { values: ["client", "employee", "admin"], message: "Invalid role" },
     required: [true, "Role is required"],
   },
 });
