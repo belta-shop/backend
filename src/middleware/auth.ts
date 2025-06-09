@@ -13,7 +13,9 @@ export const authMiddleware = async (
   const payload = await verifyUserToken(token);
 
   // prevent refresh token from being used as access token
-  if (typeof payload.tokenId === "string") throw new Unauthorized();
+  // if have uuid and no puprose, it's a refresh token
+  if (typeof payload.tokenId === "string" && !payload.purpose)
+    throw new Unauthorized();
 
   req.currentUser = payload;
 

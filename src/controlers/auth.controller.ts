@@ -5,6 +5,7 @@ import ErrorAPI from "../errors/error-api";
 import { comparePassowrd, genOTP, hashPaswword } from "../utils/bcrypt";
 import {
   signAccessToken,
+  signPurposeToken,
   signRefreshToken,
   signToken,
   verifyUserToken,
@@ -180,12 +181,13 @@ export const verifyOTP = async (
   if (purpose === OTPPurpose.EmailConfirmation) {
     await User.updateOne({ email }, { confirmed: true });
   } else if (purpose === OTPPurpose.ResetPassword) {
-    const resetPasswordToken = signToken(
-      { sub, email, role, purpose },
-      {
-        expiresIn: "15m",
-      }
-    );
+    const resetPasswordToken = await signPurposeToken({
+      id: sub,
+      email,
+      role,
+      purpose: OTPPurpose.ResetPassword,
+    });
+
     res.status(StatusCodes.OK).json({
       success: true,
       resetPasswordToken,
@@ -199,23 +201,24 @@ export const verifyOTP = async (
 export const resetPassword = async (req: Request, res: Response) => {
   if (!req.currentUser) throw new Unauthorized();
 
-  const { email, purpose } = req.currentUser;
+  const { email, purpose, tokenId } = req.currentUser;
 
   const { password } = req.body;
 
   if (!password) throw new BadRequest("password is required");
 
-  if (purpose !== OTPPurpose.ResetPassword)
-    throw new CustomError("invalid token", StatusCodes.FORBIDDEN);
+  if (purpose !== OTPPurpose.ResetPassword) throw new Unauthorized();
 
   const user = await User.findOne({ email });
-  if (!user) throw new CustomError("invalid token", StatusCodes.FORBIDDEN);
+  if (!user) throw new Unauthorized();
 
   if (comparePassowrd(password, user.password))
     throw new ErrorAPI("same_password", StatusCodes.CONFLICT);
 
   const hashed = hashPaswword(req.body.password);
   await User.updateOne({ email }, { password: hashed });
+
+  await Token.deleteOne({ uuid: tokenId });
 
   res.status(StatusCodes.OK).json({
     success: true,
