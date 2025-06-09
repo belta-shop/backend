@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import BadRequest from "../errors/bad-request";
 import ErrorAPI from "../errors/error-api";
 import User from "../models/user.model";
-import { allOtpPurposes, OTPPurpose } from "../types/otp";
+import { OTPPurpose } from "../types/otp";
 import { genOTP } from "./bcrypt";
 import OTP from "../models/otp.model";
 import { sendOTPMail } from "./email";
@@ -20,11 +20,6 @@ export async function sendOtp({
 >) {
   if (!email || !purpose)
     throw new BadRequest("email and purpose are required");
-
-  if (!allOtpPurposes.includes(purpose as any))
-    throw new BadRequest(
-      `pupose should be one of [ ${allOtpPurposes.join(", ")} ]`
-    );
 
   const user = await User.findOne({ email });
   if (!user) throw new ErrorAPI("no_user_with_email", StatusCodes.NOT_FOUND);
@@ -45,7 +40,7 @@ export async function sendOtp({
         expireAt: new Date(Date.now() + OTP_EXPIRE_TIME),
       },
     },
-    { upsert: true }
+    { upsert: true, runValidators: true }
   );
 
   // Send OTP

@@ -11,7 +11,7 @@ import {
   verifyUserToken,
 } from "../utils/jwt";
 import OTP from "../models/otp.model";
-import { allOtpPurposes, OTPPurpose } from "../types/otp";
+import { OTPPurpose } from "../types/otp";
 import BadRequest from "../errors/bad-request";
 import { sendOtp } from "../utils/otp";
 import { sendOTPMail } from "../utils/email";
@@ -160,11 +160,6 @@ export const verifyOTP = async (
 
   if (!email || !otp || !purpose)
     throw new BadRequest("email, otp and purpose are required");
-
-  if (!allOtpPurposes.includes(purpose as any))
-    throw new BadRequest(
-      `pupose should be one of [ ${allOtpPurposes.join(", ")} ]`
-    );
 
   const otpDoc = await OTP.findOne({ email });
   if (

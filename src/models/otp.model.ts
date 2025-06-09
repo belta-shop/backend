@@ -16,7 +16,10 @@ const OtpSchema = new Schema({
   },
   purpose: {
     type: String,
-    enum: [OTPPurpose.EmailConfirmation, OTPPurpose.ResetPassword],
+    enum: {
+      values: [OTPPurpose.EmailConfirmation, OTPPurpose.ResetPassword],
+      message: "Invalid purpose",
+    },
   },
   userAgent: String,
   ipAddress: String,
