@@ -161,15 +161,18 @@ export const verifyOTP = async (
   if (!email || !otp || !purpose)
     throw new BadRequest("email, otp and purpose are required");
 
-  const otpDoc = await OTP.findOne({ email });
-  if (
-    !otpDoc ||
-    otp !== otpDoc.value ||
-    req.ip !== otpDoc.ipAddress ||
-    req.headers["user-agent"] !== otpDoc.userAgent ||
-    purpose !== otpDoc.purpose
-  )
-    throw new ErrorAPI("invalid_otp", StatusCodes.UNAUTHORIZED);
+  // default otp: that will be used for testing
+  if (otp !== "1111") {
+    const otpDoc = await OTP.findOne({ email });
+    if (
+      !otpDoc ||
+      otp !== otpDoc.value ||
+      req.ip !== otpDoc.ipAddress ||
+      req.headers["user-agent"] !== otpDoc.userAgent ||
+      purpose !== otpDoc.purpose
+    )
+      throw new ErrorAPI("invalid_otp", StatusCodes.UNAUTHORIZED);
+  }
 
   await OTP.deleteOne({ email });
 
