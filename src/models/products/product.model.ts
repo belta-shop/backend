@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { IProduct } from "../../types/products";
+import { IOffer, IProduct } from "../../types/products";
 
 const ProductSchema = new Schema({
   nameAr: {
@@ -60,42 +60,35 @@ const ProductSchema = new Schema({
     min: [0, "Return count cannot be negative"],
   },
   offer: {
-    offer: {
-      type: Schema.Types.ObjectId,
-      ref: "Offer",
-    },
-    quantityPurchased: {
-      type: Number,
-      default: 0,
-      min: [0, "Quantity purchased cannot be negative"],
-    },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
+    type: Schema.Types.ObjectId,
+    ref: "Offer",
   },
   brand: {
     type: Schema.Types.ObjectId,
     ref: "Brand",
-    required: [true, "Brand is required"],
   },
   subcategory: {
     type: Schema.Types.ObjectId,
     ref: "SubCategory",
-    required: [true, "Subcategory is required"],
   },
-  labels: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Label",
-    },
-  ],
-  tags: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Tag",
-    },
-  ],
+  labels: {
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Label",
+      },
+    ],
+    default: [],
+  },
+  tags: {
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Tag",
+      },
+    ],
+    default: [],
+  },
   quantity: {
     type: Number,
     required: [true, "Quantity is required"],
@@ -109,6 +102,21 @@ const ProductSchema = new Schema({
     type: Number,
     required: [true, "Minimum price is required"],
     min: [0, "Minimum price cannot be negative"],
+  },
+  price: {
+    type: Number,
+    required: [true, "Price is required"],
+    min: [0, "Price cannot be negative"],
+  },
+  finalPrice: {
+    type: Number,
+    default: function () {
+      return (this as IProduct).price;
+    },
+  },
+  employeeReadOnly: {
+    type: Boolean,
+    default: false,
   },
 });
 

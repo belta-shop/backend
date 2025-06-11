@@ -1,11 +1,5 @@
-import { model, Schema, Document } from "mongoose";
-
-interface IOffer extends Document {
-  nameAr?: string;
-  nameEn?: string;
-  type: "percent" | "fixed";
-  value: number;
-}
+import { model, Schema } from "mongoose";
+import { IOffer } from "../../types/products";
 
 const OfferSchema = new Schema({
   nameAr: {
@@ -16,12 +10,11 @@ const OfferSchema = new Schema({
     type: String,
     trim: true,
   },
-  products: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Product",
-    },
-  ],
+  product: {
+    type: Schema.Types.ObjectId,
+    ref: "Product",
+    required: [true, "Product is required"],
+  },
   offerQuantity: {
     type: Number,
     required: [true, "Offer quantity is required"],
@@ -31,6 +24,11 @@ const OfferSchema = new Schema({
     type: Number,
     required: [true, "Max per client is required"],
     min: [1, "Max per client must be at least 1"],
+  },
+  quantityPurchased: {
+    type: Number,
+    default: 0,
+    min: [0, "Quantity purchased cannot be negative"],
   },
   disabled: {
     type: Boolean,
@@ -57,6 +55,10 @@ const OfferSchema = new Schema({
       message: "Invalid offer value for the selected type",
     },
   },
+  employeeReadOnly: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Validate that if one name is provided, the other must be provided too
@@ -66,6 +68,70 @@ OfferSchema.pre("save", function (this: IOffer, next) {
   }
   next();
 });
+
+// Remove offer from product when deleted
+OfferSchema.pre("deleteOne", { document: true }, async function (next) {
+  const product = await this.model("Product").findById(this.product);
+  if (product) {
+    product.updateOne({
+      $unset: { offer: 1 },
+      $set: { finalPrice: (product as any).price },
+    });
+    await product.save();
+  }
+  next();
+});
+
+// Calculate final price for a product on create / update offer
+OfferSchema.pre("save", async function (next) {
+  const product = await this.model("Product").findById(this.product);
+  if (product) {
+    product.updateOne({
+      $unset: { offer: 1 },
+      $set: { finalPrice: (product as any).price },
+    });
+    await product.save();
+  }
+  next();
+});
+
+OfferSchema.pre("updateOne", { document: true }, async function (next) {
+  const product = await this.model("Product").findById(this.product);
+  if (product) {
+    product.updateOne({
+      $unset: { offer: 1 },
+      $set: { finalPrice: (product as any).price },
+    });
+    await product.save();
+  }
+  next();
+});
+// Calculate discounted price based on offer type and value
+OfferSchema.methods.calculateDiscountedPrice = function (
+  originalPrice: number
+): number {
+  if (this.type === "percent") {
+    return originalPrice * (1 - this.value);
+  }
+  return originalPrice - this.value;
+};
+
+// Check if offer is valid (not disabled and quantity limit not reached)
+OfferSchema.methods.isValid = function (): boolean {
+  return !this.disabled && this.quantityPurchased < this.offerQuantity;
+};
+
+// Calculate final price for a product
+OfferSchema.methods.calculateFinalPrice = function (
+  originalPrice: number,
+  minPrice: number
+): number {
+  if (!this.isValid()) {
+    return originalPrice;
+  }
+  const discountedPrice = this.calculateDiscountedPrice(originalPrice);
+  return Math.max(discountedPrice, minPrice);
+};
 
 const Offer = model<IOffer>("Offer", OfferSchema);
 

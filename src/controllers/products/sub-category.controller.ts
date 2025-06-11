@@ -2,9 +2,13 @@ import { Request, Response } from "express";
 import SubCategory from "../../models/products/sub-category.model";
 import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
-import Unauthorized from "../../errors/unauthorized";
 import Category from "../../models/products/category.model";
-import { getPagination, getSearchQuery } from "../../utils/routes";
+import {
+  getPagination,
+  getSearchQuery,
+  onlyAdminCanModify,
+  onlyAdminCanSetReadOnly,
+} from "../../utils/routes";
 
 // Public get all subcategories
 export const getAllSubCategories = async (req: Request, res: Response) => {
@@ -16,9 +20,7 @@ export const getAllSubCategories = async (req: Request, res: Response) => {
     ...getSearchQuery(search, ["nameAr", "nameEn"]),
   };
 
-  if (categoryId) {
-    query.category = categoryId;
-  }
+  if (categoryId) query.category = categoryId;
 
   const subcategories = await SubCategory.find(query)
     .sort({ createdAt: -1 })
@@ -49,17 +51,10 @@ export const getAllSubCategoriesForStaff = async (
 
   const query: any = { ...getSearchQuery(search, ["nameAr", "nameEn"]) };
 
-  if (disabled !== undefined) {
-    query.disabled = disabled === "true";
-  }
-
-  if (categoryId) {
-    query.category = categoryId;
-  }
-
-  if (employeeReadOnly !== undefined) {
+  if (disabled !== undefined) query.disabled = disabled === "true";
+  if (categoryId) query.category = categoryId;
+  if (employeeReadOnly !== undefined)
     query.employeeReadOnly = employeeReadOnly === "true";
-  }
 
   const subcategories = await SubCategory.find(query)
     .populate("category", "nameAr nameEn")
@@ -84,9 +79,8 @@ export const getSubCategory = async (req: Request, res: Response) => {
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
     });
 
-  if (!subcategory) {
+  if (!subcategory)
     throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
-  }
 
   res.status(StatusCodes.OK).json(subcategory);
 };
@@ -97,45 +91,30 @@ export const getSubCategoryForStaff = async (req: Request, res: Response) => {
     "category"
   );
 
-  if (!subcategory) {
+  if (!subcategory)
     throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
-  }
+
   res.status(StatusCodes.OK).json(subcategory);
 };
 
 // Create subcategory (staff only)
 export const createSubCategory = async (req: Request, res: Response) => {
-  const { employeeReadOnly } = req.body;
-
-  // Only admin can set employeeReadOnly to true
-  if (employeeReadOnly && req.currentUser?.role !== "admin") {
-    throw new Unauthorized("Only admin can set employeeReadOnly to true");
-  }
+  onlyAdminCanSetReadOnly(req);
 
   const subcategory = await SubCategory.create(req.body);
   await subcategory.populate("category", "nameAr nameEn");
+
   res.status(StatusCodes.CREATED).json(subcategory);
 };
 
 // Update subcategory (staff only)
 export const updateSubCategory = async (req: Request, res: Response) => {
   const subcategory = await SubCategory.findById(req.params.id);
-  if (!subcategory) {
+  if (!subcategory)
     throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
-  }
 
-  // Check if employee is trying to modify employeeReadOnly
-  if (
-    req.body.employeeReadOnly !== undefined &&
-    req.currentUser?.role !== "admin"
-  ) {
-    throw new Unauthorized("Only admin can modify employeeReadOnly");
-  }
-
-  // Check if employee is trying to modify an employeeReadOnly subcategory
-  if (subcategory.employeeReadOnly && req.currentUser?.role !== "admin") {
-    throw new Unauthorized("This subcategory can only be modified by admin");
-  }
+  onlyAdminCanModify(req, subcategory);
+  onlyAdminCanSetReadOnly(req);
 
   Object.assign(subcategory, req.body);
   await subcategory.save();
@@ -147,14 +126,10 @@ export const updateSubCategory = async (req: Request, res: Response) => {
 // Delete subcategory (staff only)
 export const deleteSubCategory = async (req: Request, res: Response) => {
   const subcategory = await SubCategory.findById(req.params.id);
-  if (!subcategory) {
+  if (!subcategory)
     throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
-  }
 
-  // Check if employee is trying to delete an employeeReadOnly subcategory
-  if (subcategory.employeeReadOnly && req.currentUser?.role !== "admin") {
-    throw new Unauthorized("This subcategory can only be deleted by admin");
-  }
+  onlyAdminCanModify(req, subcategory);
 
   await subcategory.deleteOne();
   res
@@ -174,10 +149,7 @@ export const linkSubCategoryToCategory = async (
     throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
   }
 
-  // Check if employee is trying to modify an employeeReadOnly subcategory
-  if (subcategory.employeeReadOnly && req.currentUser?.role !== "admin") {
-    throw new Unauthorized("This subcategory can only be modified by admin");
-  }
+  onlyAdminCanModify(req, subcategory);
 
   if (subcategory.category)
     throw new ErrorAPI(
@@ -186,9 +158,8 @@ export const linkSubCategoryToCategory = async (
     );
 
   const category = await Category.findById(categoryId);
-  if (!category) {
+  if (!category)
     throw new ErrorAPI("Category not found", StatusCodes.NOT_FOUND);
-  }
 
   subcategory.category = categoryId;
   await subcategory.save();
@@ -210,14 +181,10 @@ export const unlinkSubCategoryFromCategory = async (
   const subcategory = await SubCategory.findById(subcategoryId).populate(
     "category"
   );
-  if (!subcategory) {
+  if (!subcategory)
     throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
-  }
 
-  // Check if employee is trying to modify an employeeReadOnly subcategory
-  if (subcategory.employeeReadOnly && req.currentUser?.role !== "admin") {
-    throw new Unauthorized("This subcategory can only be modified by admin");
-  }
+  onlyAdminCanModify(req, subcategory);
 
   if (!subcategory.category)
     throw new ErrorAPI(

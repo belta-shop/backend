@@ -1,5 +1,6 @@
 import { Request } from "express";
 import { DEFAULT_LIMIT, DEFAULT_PAGE } from "../config/global";
+import Unauthorized from "../errors/unauthorized";
 
 export function getSearchQuery(search: any, keys: string[]) {
   if (typeof search !== "string" || !search) return {};
@@ -17,4 +18,21 @@ export function getPagination(query: Request["query"]) {
   const skip = (currentPage - 1) * currentLimit;
 
   return { skip, limit: currentLimit };
+}
+
+export function onlyAdminCanModify(
+  req: Request,
+  document: { employeeReadOnly: boolean }
+) {
+  if (document.employeeReadOnly && req.currentUser?.role !== "admin") {
+    throw new Unauthorized("Only admin can modify or delete this document");
+  }
+}
+
+export function onlyAdminCanSetReadOnly(req: Request) {
+  if (req.body.employeeReadOnly && req.currentUser?.role !== "admin") {
+    throw new Unauthorized(
+      "Only admin can modify or set employeeReadOnly to true"
+    );
+  }
 }
