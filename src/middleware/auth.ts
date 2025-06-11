@@ -21,3 +21,14 @@ export const authMiddleware = async (
 
   next();
 };
+
+export const staffMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!["admin", "employee"].includes(req.currentUser?.role || "")) {
+    throw new Unauthorized("Only staff members can access this resource");
+  }
+  next();
+};

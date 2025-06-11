@@ -5,7 +5,10 @@
     "no_user_with_email": "No user found with this email.",
     "invalid_otp": "The provided OTP is incorrect or expired.",
     "email_already_confirmed": "This email is already verified. No further action is needed.",
-    "same_password": "The new password cannot be the same as your current password."
+    "same_password": "The new password cannot be the same as your current password.",
+    "category_has_subcategories": "Cannot delete category because it has subcategories.",
+    "subcategory_has_products": "Cannot delete subcategory because it has products.",
+    "brand_has_products": "Cannot delete brand because it has products."
   },
   "Email": {
     "OTP": {

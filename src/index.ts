@@ -2,8 +2,9 @@ import "dotenv/config";
 import express from "express";
 import "express-async-errors";
 import { connectDb } from "./db/connect";
-import { authRouter } from "./routes";
+import router from "./routes";
 import { ErrorHandler } from "./middleware/error-handler";
+import { languageMiddleware } from "./middleware/language";
 import cors from "cors";
 
 const app = express();
@@ -12,7 +13,8 @@ const port = process.env.PORT || 5006;
 app.set("trust proxy", true);
 app.use(express.json());
 app.use(cors());
-app.use("/auth", authRouter);
+app.use(languageMiddleware);
+app.use(router);
 
 app.get("/", (_, req) => {
   req.status(200).end("<body><h1>Welcome to Belta Shop!</h1></body>");
