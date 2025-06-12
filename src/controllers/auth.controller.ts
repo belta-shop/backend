@@ -48,11 +48,11 @@ export const login = async (
     if (!comparePassowrd(password, user.password)) {
       throw new ErrorAPI("invalid_email_or_password", StatusCodes.UNAUTHORIZED);
     } else {
-      const { _id: id, fullName, email, confirmed, role } = user;
+      const { _id, fullName, email, confirmed, role } = user;
 
-      const accessToken = signAccessToken({ id: id.toString(), email, role });
+      const accessToken = signAccessToken({ id: _id.toString(), email, role });
       const refreshToken = await signRefreshToken({
-        id: id.toString(),
+        id: _id.toString(),
         email,
         role,
       });
@@ -79,7 +79,7 @@ export const login = async (
       }
 
       const body = {
-        id,
+        _id,
         fullName,
         email,
         confirmed,
@@ -110,10 +110,10 @@ export const refreshAccessToken = async (
   const accessToken = signAccessToken({ id: sub, email, role });
   const refreshToken = await signRefreshToken({ id: sub, email, role });
 
-  const { _id: id, fullName, confirmed } = user;
+  const { _id, fullName, confirmed } = user;
 
   const body = {
-    id,
+    _id,
     fullName,
     email,
     confirmed,
