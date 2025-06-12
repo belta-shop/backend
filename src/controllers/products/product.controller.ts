@@ -17,8 +17,17 @@ export const getAllProducts = async (req: Request, res: Response) => {
 
   let query: any = {
     disabled: false,
-    ...getSearchQuery(search, ["nameAr", "nameEn"]),
   };
+
+  // handle Search for name and tags using same search query
+  if (typeof search === "string" && search) {
+    query.$or = [
+      { nameAr: { $regex: search, $options: "i" } },
+      { nameEn: { $regex: search, $options: "i" } },
+      { tags: { $elemMatch: { nameAr: { $regex: search, $options: "i" } } } },
+      { tags: { $elemMatch: { nameEn: { $regex: search, $options: "i" } } } },
+    ];
+  }
 
   if (brand) query.brand = brand;
   if (subcategory) query.subcategory = subcategory;
@@ -75,15 +84,35 @@ export const getAllProductsForStaff = async (req: Request, res: Response) => {
     req.query;
   const { skip, limit } = getPagination(req.query);
 
-  let query: any = {
-    ...getSearchQuery(search, ["nameAr", "nameEn"]),
-  };
+  let query: any = {};
+
+  // handle Search for name and tags using different queries
+  const isSearch = typeof search === "string" && search;
+  const isTag = typeof tag === "string" && tag;
+
+  if (isSearch || isTag) {
+    let or: any[] = [];
+    if (isSearch) {
+      or = [
+        { nameAr: { $regex: search, $options: "i" } },
+        { nameEn: { $regex: search, $options: "i" } },
+      ];
+    }
+    if (isTag) {
+      or.push({
+        tags: { $elemMatch: { nameAr: { $regex: tag, $options: "i" } } },
+      });
+      or.push({
+        tags: { $elemMatch: { nameEn: { $regex: tag, $options: "i" } } },
+      });
+    }
+    query.$or = or;
+  }
 
   if (disabled !== undefined) query.disabled = disabled === "true";
   if (brand) query.brand = brand;
   if (subcategory) query.subcategory = subcategory;
   if (label) query.labels = label;
-  if (tag) query.tags = tag;
   if (employeeReadOnly !== undefined)
     query.employeeReadOnly = employeeReadOnly === "true";
 

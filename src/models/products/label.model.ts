@@ -16,6 +16,12 @@ const LabelSchema = new Schema({
     required: [true, "Color is required"],
     trim: true,
   },
+  products: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+    },
+  ],
 });
 
 const Label = model("Label", LabelSchema);
