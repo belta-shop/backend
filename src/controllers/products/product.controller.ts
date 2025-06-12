@@ -4,11 +4,11 @@ import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 import {
   getPagination,
-  getSearchQuery,
   onlyAdminCanModify,
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import SubCategory from "../../models/products/sub-category.model";
+import Brand from "../../models/products/brand.model";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -26,6 +26,8 @@ export const getAllProducts = async (req: Request, res: Response) => {
       { nameEn: { $regex: search, $options: "i" } },
       { tags: { $elemMatch: { nameAr: { $regex: search, $options: "i" } } } },
       { tags: { $elemMatch: { nameEn: { $regex: search, $options: "i" } } } },
+      { brand: { nameAr: { $regex: search, $options: "i" } } },
+      { brand: { nameEn: { $regex: search, $options: "i" } } },
     ];
   }
 
@@ -89,6 +91,7 @@ export const getAllProductsForStaff = async (req: Request, res: Response) => {
   // handle Search for name and tags using different queries
   const isSearch = typeof search === "string" && search;
   const isTag = typeof tag === "string" && tag;
+  const isBrand = typeof brand === "string" && brand;
 
   if (isSearch || isTag) {
     let or: any[] = [];
@@ -106,11 +109,18 @@ export const getAllProductsForStaff = async (req: Request, res: Response) => {
         tags: { $elemMatch: { nameEn: { $regex: tag, $options: "i" } } },
       });
     }
+    if (isBrand) {
+      or.push({
+        brand: { nameAr: { $regex: brand, $options: "i" } },
+      });
+      or.push({
+        brand: { nameEn: { $regex: brand, $options: "i" } },
+      });
+    }
     query.$or = or;
   }
 
   if (disabled !== undefined) query.disabled = disabled === "true";
-  if (brand) query.brand = brand;
   if (subcategory) query.subcategory = subcategory;
   if (label) query.labels = label;
   if (employeeReadOnly !== undefined)
@@ -309,6 +319,68 @@ export const unlinkProductFromSubCategory = async (
   // Populate and return product
   await product.populate([
     { path: "brand" },
+    { path: "labels" },
+    { path: "tags" },
+    { path: "offer" },
+  ]);
+
+  res.status(StatusCodes.OK).json(product);
+};
+
+// Add these new functions for brand linking
+export const linkProductToBrand = async (req: Request, res: Response) => {
+  const { productId, brandId } = req.body;
+
+  const product = await Product.findById(productId);
+  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+
+  const brand = await Brand.findById(brandId);
+  if (!brand) throw new ErrorAPI("Brand not found", StatusCodes.NOT_FOUND);
+
+  if (product.brand)
+    throw new ErrorAPI(
+      "Product is already linked to a brand",
+      StatusCodes.BAD_REQUEST
+    );
+
+  product.brand = brandId;
+  await product.save();
+  brand.products.push(productId);
+  await brand.save();
+
+  await product.populate([
+    { path: "brand" },
+    { path: "subcategory" },
+    { path: "labels" },
+    { path: "tags" },
+    { path: "offer" },
+  ]);
+
+  res.status(StatusCodes.OK).json(product);
+};
+
+export const unlinkProductFromBrand = async (req: Request, res: Response) => {
+  const { productId, brandId } = req.body;
+
+  const product = await Product.findById(productId);
+  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+
+  const brand = await Brand.findById(brandId);
+  if (!brand) throw new ErrorAPI("Brand not found", StatusCodes.NOT_FOUND);
+
+  if (!product.brand || product.brand.toString() !== brandId)
+    throw new ErrorAPI(
+      "Product is not linked to this brand",
+      StatusCodes.BAD_REQUEST
+    );
+
+  product.brand = undefined;
+  await product.save();
+  brand.products = brand.products.filter((id) => id.toString() !== productId);
+  await brand.save();
+
+  await product.populate([
+    { path: "subcategory" },
     { path: "labels" },
     { path: "tags" },
     { path: "offer" },

@@ -6,6 +6,7 @@ import productRouter from "./products/product.route";
 import offerRouter from "./products/offer.route";
 import labelRouter from "./products/label.route";
 import tagRouter from "./products/tag.route";
+import brandRouter from "./products/brand.route";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/products", productRouter);
 router.use("/offers", offerRouter);
 router.use("/labels", labelRouter);
 router.use("/tags", tagRouter);
+router.use("/brands", brandRouter);
 
 export default router;

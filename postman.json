@@ -1,0 +1,658 @@
+{
+  "info": {
+    "name": "Belta Shop API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Public Endpoints",
+          "item": [
+            {
+              "name": "Get All Products",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/products",
+                "query": [
+                  {
+                    "key": "search",
+                    "value": "",
+                    "description": "Search in name and tags"
+                  },
+                  {
+                    "key": "brand",
+                    "value": "",
+                    "description": "Filter by brand ID"
+                  },
+                  {
+                    "key": "subcategory",
+                    "value": "",
+                    "description": "Filter by subcategory ID"
+                  },
+                  {
+                    "key": "label",
+                    "value": "",
+                    "description": "Filter by label ID"
+                  },
+                  {
+                    "key": "tag",
+                    "value": "",
+                    "description": "Filter by tag ID"
+                  },
+                  {
+                    "key": "page",
+                    "value": "1"
+                  },
+                  {
+                    "key": "limit",
+                    "value": "10"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Get Single Product",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/products/:id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Staff Endpoints",
+          "item": [
+            {
+              "name": "Get All Products (Staff)",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/products/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Create Product",
+              "request": {
+                "method": "POST",
+                "url": "{{base_url}}/products/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم المنتج",
+                    "nameEn": "Product Name",
+                    "descriptionAr": "وصف المنتج",
+                    "descriptionEn": "Product Description",
+                    "coverList": ["image_url_1", "image_url_2"],
+                    "quantity": 100,
+                    "minPrice": 50,
+                    "price": 100,
+                    "brand": "brand_id",
+                    "subcategory": "subcategory_id",
+                    "labels": ["label_id_1"],
+                    "tags": ["tag_id_1"],
+                    "offer": "offer_id"
+                  }
+                }
+              }
+            },
+            {
+              "name": "Update Product",
+              "request": {
+                "method": "PATCH",
+                "url": "{{base_url}}/products/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم المنتج المحدث",
+                    "nameEn": "Updated Product Name",
+                    "descriptionAr": "وصف المنتج المحدث",
+                    "descriptionEn": "Updated Product Description",
+                    "coverList": ["image_url_1", "image_url_2"],
+                    "quantity": 100,
+                    "minPrice": 50,
+                    "price": 100,
+                    "brand": "brand_id",
+                    "subcategory": "subcategory_id",
+                    "labels": ["label_id_1"],
+                    "tags": ["tag_id_1"],
+                    "offer": "offer_id",
+                    "disabled": false
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Product",
+              "request": {
+                "method": "DELETE",
+                "url": "{{base_url}}/products/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Public Endpoints",
+          "item": [
+            {
+              "name": "Get All Categories",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/categories"
+              }
+            },
+            {
+              "name": "Get Single Category",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/categories/:id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Staff Endpoints",
+          "item": [
+            {
+              "name": "Get All Categories (Staff)",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/categories/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Create Category",
+              "request": {
+                "method": "POST",
+                "url": "{{base_url}}/categories/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم الفئة",
+                    "nameEn": "Category Name",
+                    "cover": "cover_image_url"
+                  }
+                }
+              }
+            },
+            {
+              "name": "Update Category",
+              "request": {
+                "method": "PATCH",
+                "url": "{{base_url}}/categories/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم الفئة المحدث",
+                    "nameEn": "Updated Category Name",
+                    "cover": "updated_cover_image_url",
+                    "disabled": false
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Category",
+              "request": {
+                "method": "DELETE",
+                "url": "{{base_url}}/categories/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Subcategories",
+      "item": [
+        {
+          "name": "Public Endpoints",
+          "item": [
+            {
+              "name": "Get All Subcategories",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/subcategories"
+              }
+            },
+            {
+              "name": "Get Single Subcategory",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/subcategories/:id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Staff Endpoints",
+          "item": [
+            {
+              "name": "Get All Subcategories (Staff)",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/subcategories/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Create Subcategory",
+              "request": {
+                "method": "POST",
+                "url": "{{base_url}}/subcategories/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم الفئة الفرعية",
+                    "nameEn": "Subcategory Name",
+                    "cover": "cover_image_url",
+                    "category": "category_id"
+                  }
+                }
+              }
+            },
+            {
+              "name": "Update Subcategory",
+              "request": {
+                "method": "PATCH",
+                "url": "{{base_url}}/subcategories/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم الفئة الفرعية المحدث",
+                    "nameEn": "Updated Subcategory Name",
+                    "cover": "updated_cover_image_url",
+                    "category": "category_id",
+                    "disabled": false
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Subcategory",
+              "request": {
+                "method": "DELETE",
+                "url": "{{base_url}}/subcategories/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Offers",
+      "item": [
+        {
+          "name": "Public Endpoints",
+          "item": [
+            {
+              "name": "Get All Offers",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/offers"
+              }
+            },
+            {
+              "name": "Get Single Offer",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/offers/:id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Staff Endpoints",
+          "item": [
+            {
+              "name": "Get All Offers (Staff)",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/offers/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Create Offer",
+              "request": {
+                "method": "POST",
+                "url": "{{base_url}}/offers/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم العرض",
+                    "nameEn": "Offer Name",
+                    "descriptionAr": "وصف العرض",
+                    "descriptionEn": "Offer Description",
+                    "discount": 20,
+                    "startDate": "2024-03-20T00:00:00.000Z",
+                    "endDate": "2024-04-20T00:00:00.000Z",
+                    "disabled": false
+                  }
+                }
+              }
+            },
+            {
+              "name": "Update Offer",
+              "request": {
+                "method": "PATCH",
+                "url": "{{base_url}}/offers/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم العرض المحدث",
+                    "nameEn": "Updated Offer Name",
+                    "descriptionAr": "وصف العرض المحدث",
+                    "descriptionEn": "Updated Offer Description",
+                    "discount": 25,
+                    "startDate": "2024-03-20T00:00:00.000Z",
+                    "endDate": "2024-04-20T00:00:00.000Z",
+                    "disabled": false
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Offer",
+              "request": {
+                "method": "DELETE",
+                "url": "{{base_url}}/offers/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Labels",
+      "item": [
+        {
+          "name": "Public Endpoints",
+          "item": [
+            {
+              "name": "Get All Labels",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/labels"
+              }
+            },
+            {
+              "name": "Get Single Label",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/labels/:id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Staff Endpoints",
+          "item": [
+            {
+              "name": "Get All Labels (Staff)",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/labels/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Create Label",
+              "request": {
+                "method": "POST",
+                "url": "{{base_url}}/labels/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم التصنيف",
+                    "nameEn": "Label Name",
+                    "color": "#FF0000"
+                  }
+                }
+              }
+            },
+            {
+              "name": "Update Label",
+              "request": {
+                "method": "PATCH",
+                "url": "{{base_url}}/labels/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم التصنيف المحدث",
+                    "nameEn": "Updated Label Name",
+                    "color": "#00FF00"
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Label",
+              "request": {
+                "method": "DELETE",
+                "url": "{{base_url}}/labels/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tags",
+      "item": [
+        {
+          "name": "Public Endpoints",
+          "item": [
+            {
+              "name": "Get All Tags",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/tags"
+              }
+            },
+            {
+              "name": "Get Single Tag",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/tags/:id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Staff Endpoints",
+          "item": [
+            {
+              "name": "Get All Tags (Staff)",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/tags/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Create Tag",
+              "request": {
+                "method": "POST",
+                "url": "{{base_url}}/tags/staff",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم الوسم",
+                    "nameEn": "Tag Name"
+                  }
+                }
+              }
+            },
+            {
+              "name": "Update Tag",
+              "request": {
+                "method": "PATCH",
+                "url": "{{base_url}}/tags/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": {
+                    "nameAr": "اسم الوسم المحدث",
+                    "nameEn": "Updated Tag Name"
+                  }
+                }
+              }
+            },
+            {
+              "name": "Delete Tag",
+              "request": {
+                "method": "DELETE",
+                "url": "{{base_url}}/tags/staff/:id",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
