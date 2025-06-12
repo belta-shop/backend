@@ -17,6 +17,14 @@ const TagSchema = new Schema({
       ref: "Product",
     },
   ],
+  employeeReadOnly: {
+    type: Boolean,
+    default: false,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Tag = model("Tag", TagSchema);

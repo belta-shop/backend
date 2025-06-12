@@ -343,6 +343,8 @@ export const linkProductToBrand = async (req: Request, res: Response) => {
       StatusCodes.BAD_REQUEST
     );
 
+  onlyAdminCanModify(req, product);
+
   product.brand = brandId;
   await product.save();
   brand.products.push(productId);
@@ -373,6 +375,8 @@ export const unlinkProductFromBrand = async (req: Request, res: Response) => {
       "Product is not linked to this brand",
       StatusCodes.BAD_REQUEST
     );
+
+  onlyAdminCanModify(req, product);
 
   product.brand = undefined;
   await product.save();

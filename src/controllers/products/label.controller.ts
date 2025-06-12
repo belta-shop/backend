@@ -3,17 +3,25 @@ import Label from "../../models/products/label.model";
 import Product from "../../models/products/product.model";
 import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
-import { getPagination, getSearchQuery } from "../../utils/routes";
+import {
+  getPagination,
+  getSearchQuery,
+  onlyAdminCanModify,
+  onlyAdminCanSetReadOnly,
+} from "../../utils/routes";
 
 // Staff get all labels
 export const getAllLabelsForStaff = async (req: Request, res: Response) => {
-  const { search, color } = req.query;
+  const { search, color, employeeReadOnly } = req.query;
   const { skip, limit } = getPagination(req.query);
 
   let query: any = {
     ...getSearchQuery(search, ["nameAr", "nameEn"]),
     ...getSearchQuery(color, ["color"]),
   };
+
+  if (employeeReadOnly !== undefined)
+    query.employeeReadOnly = employeeReadOnly === "true";
 
   const labels = await Label.find(query)
     .sort({ createdAt: -1 })
@@ -73,6 +81,8 @@ export const getLabel = async (req: Request, res: Response) => {
 
 // Create label (staff only)
 export const createLabel = async (req: Request, res: Response) => {
+  onlyAdminCanSetReadOnly(req);
+
   const label = await Label.create(req.body);
   res.status(StatusCodes.CREATED).json(label);
 };
@@ -81,6 +91,9 @@ export const createLabel = async (req: Request, res: Response) => {
 export const updateLabel = async (req: Request, res: Response) => {
   const label = await Label.findById(req.params.id);
   if (!label) throw new ErrorAPI("Label not found", StatusCodes.NOT_FOUND);
+
+  onlyAdminCanModify(req, label);
+  onlyAdminCanSetReadOnly(req);
 
   Object.assign(label, req.body);
   await label.save();
@@ -92,6 +105,8 @@ export const updateLabel = async (req: Request, res: Response) => {
 export const deleteLabel = async (req: Request, res: Response) => {
   const label = await Label.findById(req.params.id);
   if (!label) throw new ErrorAPI("Label not found", StatusCodes.NOT_FOUND);
+
+  onlyAdminCanModify(req, label);
 
   // Remove label from all products
   await Product.updateMany(
@@ -118,6 +133,8 @@ export const linkLabelToProduct = async (req: Request, res: Response) => {
       "Product is already linked to this label",
       StatusCodes.BAD_REQUEST
     );
+
+  onlyAdminCanModify(req, product);
 
   product.labels.push(labelId);
   await product.save();
@@ -150,6 +167,8 @@ export const unlinkLabelFromProduct = async (req: Request, res: Response) => {
       "Product is not linked to this label",
       StatusCodes.BAD_REQUEST
     );
+
+  onlyAdminCanModify(req, product);
 
   product.labels = product.labels.filter((id) => id.toString() !== labelId);
   await product.save();

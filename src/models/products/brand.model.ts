@@ -27,6 +27,10 @@ const BrandSchema = new Schema({
       ref: "Product",
     },
   ],
+  employeeReadOnly: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Prevent deletion if brand has products

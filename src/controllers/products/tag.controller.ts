@@ -3,16 +3,25 @@ import Tag from "../../models/products/tag.model";
 import Product from "../../models/products/product.model";
 import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
-import { getPagination, getSearchQuery } from "../../utils/routes";
+import {
+  getPagination,
+  getSearchQuery,
+  onlyAdminCanModify,
+  onlyAdminCanSetReadOnly,
+} from "../../utils/routes";
 
 // Staff get all tags
 export const getAllTagsForStaff = async (req: Request, res: Response) => {
-  const { search } = req.query;
+  const { search, disabled, employeeReadOnly } = req.query;
   const { skip, limit } = getPagination(req.query);
 
   let query: any = {
     ...getSearchQuery(search, ["nameAr", "nameEn"]),
   };
+
+  if (disabled !== undefined) query.disabled = disabled === "true";
+  if (employeeReadOnly !== undefined)
+    query.employeeReadOnly = employeeReadOnly === "true";
 
   const tags = await Tag.find(query)
     .sort({ createdAt: -1 })
@@ -31,6 +40,7 @@ export const getAllTags = async (req: Request, res: Response) => {
   const { skip, limit } = getPagination(req.query);
 
   let query: any = {
+    disabled: false,
     ...getSearchQuery(search, ["nameAr", "nameEn"]),
   };
 
@@ -69,6 +79,8 @@ export const getTag = async (req: Request, res: Response) => {
 
 // Create tag (staff only)
 export const createTag = async (req: Request, res: Response) => {
+  onlyAdminCanSetReadOnly(req);
+
   const tag = await Tag.create(req.body);
   res.status(StatusCodes.CREATED).json(tag);
 };
@@ -77,6 +89,9 @@ export const createTag = async (req: Request, res: Response) => {
 export const updateTag = async (req: Request, res: Response) => {
   const tag = await Tag.findById(req.params.id).populate("products");
   if (!tag) throw new ErrorAPI("Tag not found", StatusCodes.NOT_FOUND);
+
+  onlyAdminCanModify(req, tag);
+  onlyAdminCanSetReadOnly(req);
 
   Object.assign(tag, req.body);
   await tag.save();
@@ -88,6 +103,8 @@ export const updateTag = async (req: Request, res: Response) => {
 export const deleteTag = async (req: Request, res: Response) => {
   const tag = await Tag.findById(req.params.id);
   if (!tag) throw new ErrorAPI("Tag not found", StatusCodes.NOT_FOUND);
+
+  onlyAdminCanModify(req, tag);
 
   // Remove tag from all products
   await Product.updateMany({ tags: tag._id }, { $pull: { tags: tag._id } });
@@ -111,6 +128,8 @@ export const linkTagToProduct = async (req: Request, res: Response) => {
       "Product is already linked to this tag",
       StatusCodes.BAD_REQUEST
     );
+
+  onlyAdminCanModify(req, product);
 
   product.tags.push(tagId);
   await product.save();
@@ -143,6 +162,8 @@ export const unlinkTagFromProduct = async (req: Request, res: Response) => {
       "Product is not linked to this tag",
       StatusCodes.BAD_REQUEST
     );
+
+  onlyAdminCanModify(req, product);
 
   product.tags = product.tags.filter((id) => id.toString() !== tagId);
   await product.save();

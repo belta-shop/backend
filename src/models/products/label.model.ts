@@ -22,6 +22,10 @@ const LabelSchema = new Schema({
       ref: "Product",
     },
   ],
+  employeeReadOnly: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Label = model("Label", LabelSchema);
