@@ -9,6 +9,7 @@ import {
 } from "../../utils/routes";
 import SubCategory from "../../models/products/sub-category.model";
 import Brand from "../../models/products/brand.model";
+import { IOffer } from "../../types/products";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -230,6 +231,8 @@ export const updateProduct = async (req: Request, res: Response) => {
     { path: "tags" },
     { path: "offer" },
   ]);
+
+  await (product.offer as unknown as IOffer | null)?.calculateFinalPrice();
 
   res.status(StatusCodes.OK).json(product);
 };

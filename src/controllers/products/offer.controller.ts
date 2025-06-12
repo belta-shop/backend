@@ -70,11 +70,13 @@ export const createOffer = async (req: Request, res: Response) => {
     product: productId,
   });
 
+  await offer.calculateFinalPrice();
+
   // Link offer to product and trigger final price recalculation
   product.offer = offer._id as any;
   await product.save();
 
-  await offer.populate("product", "nameAr nameEn price");
+  await offer.populate("product", "nameAr nameEn price finalPrice");
   res.status(StatusCodes.CREATED).json(offer);
 };
 
@@ -88,12 +90,12 @@ export const updateOffer = async (req: Request, res: Response) => {
   onlyAdminCanModify(req, offer);
   onlyAdminCanSetReadOnly(req);
 
-  // If product is being changed
-  if (req.body.productId && req.body.productId !== offer.product.toString()) {
+  const isProductChanged =
+    req.body.productId && req.body.productId !== offer.product.toString();
+  if (isProductChanged) {
     const newProduct = await Product.findById(req.body.productId);
-    if (!newProduct) {
+    if (!newProduct)
       throw new ErrorAPI("New product not found", StatusCodes.NOT_FOUND);
-    }
 
     if (newProduct.offer)
       throw new ErrorAPI(
@@ -101,20 +103,30 @@ export const updateOffer = async (req: Request, res: Response) => {
         StatusCodes.CONFLICT
       );
 
-    // Remove offer from old product
-    await Product.findByIdAndUpdate(offer.product, { $unset: { offer: 1 } });
+    const oldProduct = await Product.findByIdAndUpdate(
+      offer.product,
+      {
+        $unset: { offer: 1 },
+      },
+      { new: true }
+    );
+    if (oldProduct) {
+      oldProduct.finalPrice = oldProduct.price;
+      await oldProduct.save();
+    }
 
     // Link offer to new product
     newProduct.offer = offer._id as any;
     await newProduct.save();
+
+    offer.product = newProduct._id as any;
+    await offer.save();
   }
 
   Object.assign(offer, req.body);
   await offer.save();
 
-  // Trigger final price recalculation for the product
-  const product = await Product.findById(offer.product);
-  if (product) await product.save();
+  await offer.calculateFinalPrice();
 
   await offer.populate("product", "nameAr nameEn price finalPrice");
   res.status(StatusCodes.OK).json(offer);
@@ -125,6 +137,19 @@ export const deleteOffer = async (req: Request, res: Response) => {
   if (!offer) throw new ErrorAPI("Offer not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, offer);
+
+  const product = await Product.findByIdAndUpdate(
+    offer.product,
+    {
+      $unset: { offer: 1 },
+    },
+    { new: true }
+  );
+
+  if (product) {
+    product.finalPrice = product.price;
+    await product.save();
+  }
 
   await offer.deleteOne();
   res.status(StatusCodes.OK).json({ message: "Offer deleted successfully" });

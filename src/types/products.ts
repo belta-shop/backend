@@ -38,5 +38,5 @@ export interface IOffer extends Document {
   employeeReadOnly: boolean;
   calculateDiscountedPrice(originalPrice: number): number;
   isValid(): boolean;
-  calculateFinalPrice(originalPrice: number, minPrice: number): number;
+  calculateFinalPrice(): Promise<void>;
 }

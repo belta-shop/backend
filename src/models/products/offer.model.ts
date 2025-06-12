@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
 import { IOffer } from "../../types/products";
+import Product from "./product.model";
 
 const OfferSchema = new Schema({
   nameAr: {
@@ -66,46 +67,10 @@ OfferSchema.pre("save", function (this: IOffer, next) {
   if ((this.nameAr && !this.nameEn) || (!this.nameAr && this.nameEn)) {
     throw new Error("Both Arabic and English names must be provided together");
   }
+
   next();
 });
 
-// Remove offer from product when deleted
-OfferSchema.pre("deleteOne", { document: true }, async function (next) {
-  const product = await this.model("Product").findById(this.product);
-  if (product) {
-    product.updateOne({
-      $unset: { offer: 1 },
-      $set: { finalPrice: (product as any).price },
-    });
-    await product.save();
-  }
-  next();
-});
-
-// Calculate final price for a product on create / update offer
-OfferSchema.pre("save", async function (next) {
-  const product = await this.model("Product").findById(this.product);
-  if (product) {
-    product.updateOne({
-      $unset: { offer: 1 },
-      $set: { finalPrice: (product as any).price },
-    });
-    await product.save();
-  }
-  next();
-});
-
-OfferSchema.pre("updateOne", { document: true }, async function (next) {
-  const product = await this.model("Product").findById(this.product);
-  if (product) {
-    product.updateOne({
-      $unset: { offer: 1 },
-      $set: { finalPrice: (product as any).price },
-    });
-    await product.save();
-  }
-  next();
-});
 // Calculate discounted price based on offer type and value
 OfferSchema.methods.calculateDiscountedPrice = function (
   originalPrice: number
@@ -122,15 +87,21 @@ OfferSchema.methods.isValid = function (): boolean {
 };
 
 // Calculate final price for a product
-OfferSchema.methods.calculateFinalPrice = function (
-  originalPrice: number,
-  minPrice: number
-): number {
+OfferSchema.methods.calculateFinalPrice = async function () {
+  const product = await Product.findById(this.product);
+
+  if (!product) return;
+
+  const { price: originalPrice, minPrice } = product;
+
   if (!this.isValid()) {
-    return originalPrice;
+    product.finalPrice = originalPrice;
   }
+
   const discountedPrice = this.calculateDiscountedPrice(originalPrice);
-  return Math.max(discountedPrice, minPrice);
+  product.finalPrice = Math.max(discountedPrice, minPrice);
+
+  await product.save();
 };
 
 const Offer = model<IOffer>("Offer", OfferSchema);
