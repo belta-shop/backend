@@ -1,7 +1,9 @@
 {
   "info": {
+    "_postman_id": "132cd1dd-2213-4179-b502-d9d7ef7169ba",
     "name": "Belta Shop API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "29422882"
   },
   "item": [
     {
@@ -14,50 +16,32 @@
               "name": "Get All Products",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/products",
-                "query": [
-                  {
-                    "key": "search",
-                    "value": "",
-                    "description": "Search in name and tags"
-                  },
-                  {
-                    "key": "brand",
-                    "value": "",
-                    "description": "Filter by brand ID"
-                  },
-                  {
-                    "key": "subcategory",
-                    "value": "",
-                    "description": "Filter by subcategory ID"
-                  },
-                  {
-                    "key": "label",
-                    "value": "",
-                    "description": "Filter by label ID"
-                  },
-                  {
-                    "key": "tag",
-                    "value": "",
-                    "description": "Filter by tag ID"
-                  },
-                  {
-                    "key": "page",
-                    "value": "1"
-                  },
-                  {
-                    "key": "limit",
-                    "value": "10"
-                  }
-                ]
-              }
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products",
+                  "host": ["{{base_url}}"],
+                  "path": ["products"]
+                }
+              },
+              "response": []
             },
             {
               "name": "Get Single Product",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/products/:id"
-              }
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["products", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         },
@@ -68,20 +52,43 @@
               "name": "Get All Products (Staff)",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/products/staff",
                 "header": [
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
                   }
-                ]
-              }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/products/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["products", "staff"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Single Product (Staff)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["products", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "684a7c5a8e5528aa69bf3e5f"
+                    }
+                  ]
+                }
+              },
+              "response": []
             },
             {
               "name": "Create Product",
               "request": {
                 "method": "POST",
-                "url": "{{base_url}}/products/staff",
                 "header": [
                   {
                     "key": "Authorization",
@@ -90,29 +97,25 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم المنتج",
-                    "nameEn": "Product Name",
-                    "descriptionAr": "وصف المنتج",
-                    "descriptionEn": "Product Description",
-                    "coverList": ["image_url_1", "image_url_2"],
-                    "quantity": 100,
-                    "minPrice": 50,
-                    "price": 100,
-                    "brand": "brand_id",
-                    "subcategory": "subcategory_id",
-                    "labels": ["label_id_1"],
-                    "tags": ["tag_id_1"],
-                    "offer": "offer_id"
+                  "raw": "{\r\n    \"nameAr\": \"اسم المنتج\",\r\n    \"nameEn\": \"Product Name\",\r\n    \"descriptionAr\": \"وصف المنتج\",\r\n    \"descriptionEn\": \"Product Description\",\r\n    \"coverList\": [\"image_url_1\", \"image_url_2\"],\r\n    \"quantity\": 100,\r\n    \"minPrice\": 50,\r\n    \"price\": 100,\r\n    \"brand\": \"684a7c108e5528aa69bf3e5c\",\r\n    \"subcategory\": \"684a7b7f8e5528aa69bf3e53\",\r\n    \"labels\": [\"684a7bbb8e5528aa69bf3e56\"],\r\n    \"tags\": [\"684a7bd98e5528aa69bf3e59\"],\r\n    \"employeeReadOnly\": false\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
                   }
+                },
+                "url": {
+                  "raw": "{{base_url}}/products/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["products", "staff"]
                 }
-              }
+              },
+              "response": []
             },
             {
               "name": "Update Product",
               "request": {
                 "method": "PATCH",
-                "url": "{{base_url}}/products/staff/:id",
                 "header": [
                   {
                     "key": "Authorization",
@@ -121,37 +124,202 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم المنتج المحدث",
-                    "nameEn": "Updated Product Name",
-                    "descriptionAr": "وصف المنتج المحدث",
-                    "descriptionEn": "Updated Product Description",
-                    "coverList": ["image_url_1", "image_url_2"],
-                    "quantity": 100,
-                    "minPrice": 50,
-                    "price": 100,
-                    "brand": "brand_id",
-                    "subcategory": "subcategory_id",
-                    "labels": ["label_id_1"],
-                    "tags": ["tag_id_1"],
-                    "offer": "offer_id",
-                    "disabled": false
-                  }
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/products/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["products", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
                 }
-              }
+              },
+              "response": []
             },
             {
               "name": "Delete Product",
               "request": {
                 "method": "DELETE",
-                "url": "{{base_url}}/products/staff/:id",
                 "header": [
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
                   }
-                ]
-              }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/products/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["products", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Brands",
+      "item": [
+        {
+          "name": "Public Endpoints",
+          "item": [
+            {
+              "name": "Get All Brands",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/brands",
+                  "host": ["{{base_url}}"],
+                  "path": ["brands"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Single Brand",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/brands/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["brands", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Staff Endpoints",
+          "item": [
+            {
+              "name": "Get All Brands (Staff)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/brands/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["brands", "staff"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Single Brand (Staff)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/brands/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["brands", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Brand",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nameAr\": \"اسم الماركة\",\r\n    \"nameEn\": \"Brand Name\",\r\n    \"cover\": \"cover_image_url\",\r\n    \"employeeReadOnly\": false\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/brands/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["brands", "staff"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Brand",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/brands/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["brands", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Brand",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/brands/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["brands", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         }
@@ -167,15 +335,32 @@
               "name": "Get All Categories",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/categories"
-              }
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/categories",
+                  "host": ["{{base_url}}"],
+                  "path": ["categories"]
+                }
+              },
+              "response": []
             },
             {
               "name": "Get Single Category",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/categories/:id"
-              }
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/categories/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["categories", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         },
@@ -186,20 +371,42 @@
               "name": "Get All Categories (Staff)",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/categories/staff",
                 "header": [
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
                   }
-                ]
-              }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/categories/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["categories", "staff"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Single Category (Staff)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/categories/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["categories", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             },
             {
               "name": "Create Category",
               "request": {
                 "method": "POST",
-                "url": "{{base_url}}/categories/staff",
                 "header": [
                   {
                     "key": "Authorization",
@@ -208,19 +415,25 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم الفئة",
-                    "nameEn": "Category Name",
-                    "cover": "cover_image_url"
+                  "raw": "{\r\n    \"nameAr\": \"اسم الفئة\",\r\n    \"nameEn\": \"Category Name\",\r\n    \"cover\": \"cover_image_url\",\r\n    \"employeeReadOnly\": false\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
                   }
+                },
+                "url": {
+                  "raw": "{{base_url}}/categories/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["categories", "staff"]
                 }
-              }
+              },
+              "response": []
             },
             {
               "name": "Update Category",
               "request": {
                 "method": "PATCH",
-                "url": "{{base_url}}/categories/staff/:id",
                 "header": [
                   {
                     "key": "Authorization",
@@ -229,27 +442,43 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم الفئة المحدث",
-                    "nameEn": "Updated Category Name",
-                    "cover": "updated_cover_image_url",
-                    "disabled": false
-                  }
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/categories/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["categories", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
                 }
-              }
+              },
+              "response": []
             },
             {
               "name": "Delete Category",
               "request": {
                 "method": "DELETE",
-                "url": "{{base_url}}/categories/staff/:id",
                 "header": [
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
                   }
-                ]
-              }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/categories/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["categories", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         }
@@ -265,15 +494,32 @@
               "name": "Get All Subcategories",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/subcategories"
-              }
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/subcategories",
+                  "host": ["{{base_url}}"],
+                  "path": ["subcategories"]
+                }
+              },
+              "response": []
             },
             {
               "name": "Get Single Subcategory",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/subcategories/:id"
-              }
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/subcategories/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["subcategories", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         },
@@ -284,20 +530,42 @@
               "name": "Get All Subcategories (Staff)",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/subcategories/staff",
                 "header": [
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
                   }
-                ]
-              }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/subcategories/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["subcategories", "staff"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Single Subcategory (Staff)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/subcategories/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["subcategories", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             },
             {
               "name": "Create Subcategory",
               "request": {
                 "method": "POST",
-                "url": "{{base_url}}/subcategories/staff",
                 "header": [
                   {
                     "key": "Authorization",
@@ -306,20 +574,25 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم الفئة الفرعية",
-                    "nameEn": "Subcategory Name",
-                    "cover": "cover_image_url",
-                    "category": "category_id"
+                  "raw": "{\r\n    \"nameAr\": \"اسم الفئة الفرعية\",\r\n    \"nameEn\": \"Subcategory Name\",\r\n    \"cover\": \"cover_image_url\",\r\n    \"employeeReadOnly\": false\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
                   }
+                },
+                "url": {
+                  "raw": "{{base_url}}/subcategories/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["subcategories", "staff"]
                 }
-              }
+              },
+              "response": []
             },
             {
               "name": "Update Subcategory",
               "request": {
                 "method": "PATCH",
-                "url": "{{base_url}}/subcategories/staff/:id",
                 "header": [
                   {
                     "key": "Authorization",
@@ -328,28 +601,43 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم الفئة الفرعية المحدث",
-                    "nameEn": "Updated Subcategory Name",
-                    "cover": "updated_cover_image_url",
-                    "category": "category_id",
-                    "disabled": false
-                  }
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/subcategories/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["subcategories", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
                 }
-              }
+              },
+              "response": []
             },
             {
               "name": "Delete Subcategory",
               "request": {
                 "method": "DELETE",
-                "url": "{{base_url}}/subcategories/staff/:id",
                 "header": [
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
                   }
-                ]
-              }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/subcategories/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["subcategories", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         }
@@ -359,106 +647,112 @@
       "name": "Offers",
       "item": [
         {
-          "name": "Public Endpoints",
-          "item": [
-            {
-              "name": "Get All Offers",
-              "request": {
-                "method": "GET",
-                "url": "{{base_url}}/offers"
-              }
-            },
-            {
-              "name": "Get Single Offer",
-              "request": {
-                "method": "GET",
-                "url": "{{base_url}}/offers/:id"
-              }
+          "name": "Get All Offers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/offers",
+              "host": ["{{base_url}}"],
+              "path": ["offers"]
             }
-          ]
+          },
+          "response": []
         },
         {
-          "name": "Staff Endpoints",
-          "item": [
-            {
-              "name": "Get All Offers (Staff)",
-              "request": {
-                "method": "GET",
-                "url": "{{base_url}}/offers/staff",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ]
-              }
-            },
-            {
-              "name": "Create Offer",
-              "request": {
-                "method": "POST",
-                "url": "{{base_url}}/offers/staff",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم العرض",
-                    "nameEn": "Offer Name",
-                    "descriptionAr": "وصف العرض",
-                    "descriptionEn": "Offer Description",
-                    "discount": 20,
-                    "startDate": "2024-03-20T00:00:00.000Z",
-                    "endDate": "2024-04-20T00:00:00.000Z",
-                    "disabled": false
-                  }
+          "name": "Get Single Offer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/offers/:id",
+              "host": ["{{base_url}}"],
+              "path": ["offers", ":id"],
+              "variable": [
+                {
+                  "key": "id"
                 }
-              }
-            },
-            {
-              "name": "Update Offer",
-              "request": {
-                "method": "PATCH",
-                "url": "{{base_url}}/offers/staff/:id",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم العرض المحدث",
-                    "nameEn": "Updated Offer Name",
-                    "descriptionAr": "وصف العرض المحدث",
-                    "descriptionEn": "Updated Offer Description",
-                    "discount": 25,
-                    "startDate": "2024-03-20T00:00:00.000Z",
-                    "endDate": "2024-04-20T00:00:00.000Z",
-                    "disabled": false
-                  }
-                }
-              }
-            },
-            {
-              "name": "Delete Offer",
-              "request": {
-                "method": "DELETE",
-                "url": "{{base_url}}/offers/staff/:id",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ]
-              }
+              ]
             }
-          ]
+          },
+          "response": []
+        },
+        {
+          "name": "Create Offer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nameAr\": \"اسم العرض\",\r\n    \"nameEn\": \"Offer Name\",\r\n    \"productId\": \"684a7c5a8e5528aa69bf3e5f\",\r\n    \"type\": \"fixed\",\r\n    \"value\": 20,\r\n    \"disabled\": false,\r\n    \"offerQuantity\": 5000,\r\n    \"maxPerClient\": 20,\r\n    \"employeeReadOnly\": false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/offers",
+              "host": ["{{base_url}}"],
+              "path": ["offers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Offer",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/offers/:id",
+              "host": ["{{base_url}}"],
+              "path": ["offers", ":id"],
+              "variable": [
+                {
+                  "key": "id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Offer",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/offers/:id",
+              "host": ["{{base_url}}"],
+              "path": ["offers", ":id"],
+              "variable": [
+                {
+                  "key": "id"
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -472,15 +766,32 @@
               "name": "Get All Labels",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/labels"
-              }
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/labels",
+                  "host": ["{{base_url}}"],
+                  "path": ["labels"]
+                }
+              },
+              "response": []
             },
             {
               "name": "Get Single Label",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/labels/:id"
-              }
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/labels/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["labels", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         },
@@ -491,20 +802,42 @@
               "name": "Get All Labels (Staff)",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/labels/staff",
                 "header": [
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
                   }
-                ]
-              }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/labels/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["labels", "staff"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Single Label (Staff)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/labels/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["labels", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             },
             {
               "name": "Create Label",
               "request": {
                 "method": "POST",
-                "url": "{{base_url}}/labels/staff",
                 "header": [
                   {
                     "key": "Authorization",
@@ -513,19 +846,25 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم التصنيف",
-                    "nameEn": "Label Name",
-                    "color": "#FF0000"
+                  "raw": "{\r\n    \"nameAr\": \"اسم التصنيف\",\r\n    \"nameEn\": \"Label Name\",\r\n    \"color\": \"#FF0000\",\r\n    \"employeeReadOnly\": false\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
                   }
+                },
+                "url": {
+                  "raw": "{{base_url}}/labels/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["labels", "staff"]
                 }
-              }
+              },
+              "response": []
             },
             {
               "name": "Update Label",
               "request": {
                 "method": "PATCH",
-                "url": "{{base_url}}/labels/staff/:id",
                 "header": [
                   {
                     "key": "Authorization",
@@ -534,26 +873,43 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم التصنيف المحدث",
-                    "nameEn": "Updated Label Name",
-                    "color": "#00FF00"
-                  }
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/labels/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["labels", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
                 }
-              }
+              },
+              "response": []
             },
             {
               "name": "Delete Label",
               "request": {
                 "method": "DELETE",
-                "url": "{{base_url}}/labels/staff/:id",
                 "header": [
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
                   }
-                ]
-              }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/labels/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["labels", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         }
@@ -569,15 +925,32 @@
               "name": "Get All Tags",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/tags"
-              }
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/tags",
+                  "host": ["{{base_url}}"],
+                  "path": ["tags"]
+                }
+              },
+              "response": []
             },
             {
               "name": "Get Single Tag",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/tags/:id"
-              }
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/tags/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["tags", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         },
@@ -588,20 +961,42 @@
               "name": "Get All Tags (Staff)",
               "request": {
                 "method": "GET",
-                "url": "{{base_url}}/tags/staff",
                 "header": [
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
                   }
-                ]
-              }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/tags/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["tags", "staff"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Single Tag (Staff)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/tags/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["tags", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             },
             {
               "name": "Create Tag",
               "request": {
                 "method": "POST",
-                "url": "{{base_url}}/tags/staff",
                 "header": [
                   {
                     "key": "Authorization",
@@ -610,18 +1005,25 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم الوسم",
-                    "nameEn": "Tag Name"
+                  "raw": "{\r\n    \"nameAr\": \"اسم الوسم\",\r\n    \"nameEn\": \"Tag Name\",\r\n    \"employeeReadOnly\": false\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
                   }
+                },
+                "url": {
+                  "raw": "{{base_url}}/tags/staff",
+                  "host": ["{{base_url}}"],
+                  "path": ["tags", "staff"]
                 }
-              }
+              },
+              "response": []
             },
             {
               "name": "Update Tag",
               "request": {
                 "method": "PATCH",
-                "url": "{{base_url}}/tags/staff/:id",
                 "header": [
                   {
                     "key": "Authorization",
@@ -630,29 +1032,279 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": {
-                    "nameAr": "اسم الوسم المحدث",
-                    "nameEn": "Updated Tag Name"
-                  }
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/tags/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["tags", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
                 }
-              }
+              },
+              "response": []
             },
             {
               "name": "Delete Tag",
               "request": {
                 "method": "DELETE",
-                "url": "{{base_url}}/tags/staff/:id",
                 "header": [
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
                   }
-                ]
-              }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/tags/staff/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["tags", "staff", ":id"],
+                  "variable": [
+                    {
+                      "key": "id"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         }
       ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "register",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "ar",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"fullName\": \"Mohammad Beltagy\",\r\n    \"email\": \"imbeltagy@gmail.com\",\r\n    \"password\": \"Beltagy#1\",\r\n    \"role\": \"admin\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"imbeltagy@gmail.com\",\r\n    \"password\": \"Beltagy#1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "refresh-token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODJiNzE3M2Y1YzhjODYzYWI5MzFhNDUiLCJ0b2tlbklkIjoiMmE4ZTZhMmYtMzk2MS00YjFlLWFhY2QtNWU4MmJmYjdhMDFjIiwiZW1haWwiOiJpbWJlbHRhZ3lAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzQ5NjA1MTc2LCJleHAiOjE3NTAyMDk5NzZ9.g8jGbiymUpOuSOMx9oZ-jPkZFoibOGv5RvzpwZej79\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh-token"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "resend otp",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"purpose\": \"reset_password\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/resend-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "resend-otp"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "verify otp",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"otp\": \"1111\",\r\n    \"purpose\": \"reset_password\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-otp"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reset password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODJiNzE3M2Y1YzhjODYzYWI5MzFhNDUiLCJlbWFpbCI6ImltYmVsdGFneUBnbWFpbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJwdXJwb3NlIjoicmVzZXRfcGFzc3dvcmQiLCJpYXQiOjE3NDc5MTE3NjUsImV4cCI6MTc0NzkxMjY2NX0.mr-u-22Q48CvBtf3fM6YAlSqXR6-D0A2GACX0c8Vt7Y",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"password\": \"Beltagy#1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "reset-password"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "root",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/",
+          "host": ["{{base_url}}"],
+          "path": [""]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5006",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
     }
   ]
 }
