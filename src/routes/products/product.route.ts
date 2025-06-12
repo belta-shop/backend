@@ -22,8 +22,8 @@ router.use("/staff", staffRouter);
 router.get("/", getAllProducts);
 staffRouter.route("/").get(getAllProductsForStaff).post(createProduct);
 
-staffRouter.post("/link", linkProductToSubCategory);
-staffRouter.post("/unlink", unlinkProductFromSubCategory);
+staffRouter.post("/link-subcategory", linkProductToSubCategory);
+staffRouter.post("/unlink-subcategory", unlinkProductFromSubCategory);
 staffRouter.post("/link-brand", linkProductToBrand);
 staffRouter.post("/unlink-brand", unlinkProductFromBrand);
 
