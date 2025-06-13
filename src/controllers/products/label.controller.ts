@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Label from "../../models/products/label.model";
 import Product from "../../models/products/product.model";
-import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 import {
   getPagination,
@@ -9,6 +8,7 @@ import {
   onlyAdminCanModify,
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
+import CustomError from "../../errors/custom-error";
 
 // Staff get all labels
 export const getAllLabelsForStaff = async (req: Request, res: Response) => {
@@ -62,7 +62,7 @@ export const getAllLabels = async (req: Request, res: Response) => {
 export const getLabelForStaff = async (req: Request, res: Response) => {
   const label = await Label.findById(req.params.id).populate("products");
 
-  if (!label) throw new ErrorAPI("Label not found", StatusCodes.NOT_FOUND);
+  if (!label) throw new CustomError("Label not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(label);
 };
@@ -74,7 +74,7 @@ export const getLabel = async (req: Request, res: Response) => {
     color: 1,
   });
 
-  if (!label) throw new ErrorAPI("Label not found", StatusCodes.NOT_FOUND);
+  if (!label) throw new CustomError("Label not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(label);
 };
@@ -90,7 +90,7 @@ export const createLabel = async (req: Request, res: Response) => {
 // Update label (staff only)
 export const updateLabel = async (req: Request, res: Response) => {
   const label = await Label.findById(req.params.id);
-  if (!label) throw new ErrorAPI("Label not found", StatusCodes.NOT_FOUND);
+  if (!label) throw new CustomError("Label not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, label);
   onlyAdminCanSetReadOnly(req);
@@ -104,7 +104,7 @@ export const updateLabel = async (req: Request, res: Response) => {
 // Delete label (staff only)
 export const deleteLabel = async (req: Request, res: Response) => {
   const label = await Label.findById(req.params.id);
-  if (!label) throw new ErrorAPI("Label not found", StatusCodes.NOT_FOUND);
+  if (!label) throw new CustomError("Label not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, label);
 
@@ -123,13 +123,14 @@ export const linkLabelToProduct = async (req: Request, res: Response) => {
   const { productId, labelId } = req.body;
 
   const product = await Product.findById(productId);
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   const label = await Label.findById(labelId);
-  if (!label) throw new ErrorAPI("Label not found", StatusCodes.NOT_FOUND);
+  if (!label) throw new CustomError("Label not found", StatusCodes.NOT_FOUND);
 
   if (product.labels.includes(labelId))
-    throw new ErrorAPI(
+    throw new CustomError(
       "Product is already linked to this label",
       StatusCodes.BAD_REQUEST
     );
@@ -157,13 +158,14 @@ export const unlinkLabelFromProduct = async (req: Request, res: Response) => {
   const { productId, labelId } = req.body;
 
   const product = await Product.findById(productId);
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   const label = await Label.findById(labelId);
-  if (!label) throw new ErrorAPI("Label not found", StatusCodes.NOT_FOUND);
+  if (!label) throw new CustomError("Label not found", StatusCodes.NOT_FOUND);
 
   if (!product.labels.includes(labelId))
-    throw new ErrorAPI(
+    throw new CustomError(
       "Product is not linked to this label",
       StatusCodes.BAD_REQUEST
     );

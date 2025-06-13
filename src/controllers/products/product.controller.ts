@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import Product from "../../models/products/product.model";
-import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 import {
   getPagination,
@@ -10,6 +9,7 @@ import {
 import SubCategory from "../../models/products/sub-category.model";
 import Brand from "../../models/products/brand.model";
 import { IOffer } from "../../types/products";
+import CustomError from "../../errors/custom-error";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -180,7 +180,8 @@ export const getProduct = async (req: Request, res: Response) => {
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
     });
 
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(product);
 };
@@ -194,7 +195,8 @@ export const getProductForStaff = async (req: Request, res: Response) => {
     .populate("tags")
     .populate("offer");
 
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(product);
 };
@@ -217,7 +219,8 @@ export const createProduct = async (req: Request, res: Response) => {
 // Update product (staff only)
 export const updateProduct = async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id);
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, product);
   onlyAdminCanSetReadOnly(req);
@@ -240,7 +243,8 @@ export const updateProduct = async (req: Request, res: Response) => {
 // Delete product (staff only)
 export const deleteProduct = async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id);
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, product);
 
@@ -253,19 +257,20 @@ export const linkProductToSubCategory = async (req: Request, res: Response) => {
   const { productId, subcategoryId } = req.body;
 
   const product = await Product.findById(productId);
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, product);
 
   if (product.subcategory)
-    throw new ErrorAPI(
+    throw new CustomError(
       "Product is already linked to a subcategory",
       StatusCodes.BAD_REQUEST
     );
 
   const subcategory = await SubCategory.findById(subcategoryId);
   if (!subcategory)
-    throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Subcategory not found", StatusCodes.NOT_FOUND);
 
   // Update product
   product.subcategory = subcategoryId;
@@ -295,11 +300,12 @@ export const unlinkProductFromSubCategory = async (
   const { productId } = req.body;
 
   const product = await Product.findById(productId).populate("subcategory");
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, product);
   if (!product.subcategory)
-    throw new ErrorAPI(
+    throw new CustomError(
       "Product is not linked to any subcategory",
       StatusCodes.BAD_REQUEST
     );
@@ -307,7 +313,7 @@ export const unlinkProductFromSubCategory = async (
   // Get subcategory before unlinking
   const subcategory = await SubCategory.findById(product.subcategory);
   if (!subcategory)
-    throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Subcategory not found", StatusCodes.NOT_FOUND);
 
   // Update product
   product.subcategory = undefined;
@@ -335,13 +341,14 @@ export const linkProductToBrand = async (req: Request, res: Response) => {
   const { productId, brandId } = req.body;
 
   const product = await Product.findById(productId);
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   const brand = await Brand.findById(brandId);
-  if (!brand) throw new ErrorAPI("Brand not found", StatusCodes.NOT_FOUND);
+  if (!brand) throw new CustomError("Brand not found", StatusCodes.NOT_FOUND);
 
   if (product.brand)
-    throw new ErrorAPI(
+    throw new CustomError(
       "Product is already linked to a brand",
       StatusCodes.BAD_REQUEST
     );
@@ -368,13 +375,14 @@ export const unlinkProductFromBrand = async (req: Request, res: Response) => {
   const { productId, brandId } = req.body;
 
   const product = await Product.findById(productId);
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   const brand = await Brand.findById(brandId);
-  if (!brand) throw new ErrorAPI("Brand not found", StatusCodes.NOT_FOUND);
+  if (!brand) throw new CustomError("Brand not found", StatusCodes.NOT_FOUND);
 
   if (!product.brand || product.brand.toString() !== brandId)
-    throw new ErrorAPI(
+    throw new CustomError(
       "Product is not linked to this brand",
       StatusCodes.BAD_REQUEST
     );

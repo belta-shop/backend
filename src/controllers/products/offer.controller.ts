@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Offer from "../../models/products/offer.model";
 import Product from "../../models/products/product.model";
-import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 import {
   getPagination,
@@ -9,6 +8,7 @@ import {
   onlyAdminCanModify,
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
+import CustomError from "../../errors/custom-error";
 
 // Get all offers (staff only)
 export const getAllOffers = async (req: Request, res: Response) => {
@@ -44,7 +44,7 @@ export const getOffer = async (req: Request, res: Response) => {
   );
 
   if (!offer) {
-    throw new ErrorAPI("Offer not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Offer not found", StatusCodes.NOT_FOUND);
   }
 
   res.status(StatusCodes.OK).json(offer);
@@ -58,11 +58,15 @@ export const createOffer = async (req: Request, res: Response) => {
 
   // Check if product exists
   const product = await Product.findById(productId);
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   // Check if product already has an offer
   if (product.offer)
-    throw new ErrorAPI("Product already has an offer", StatusCodes.BAD_REQUEST);
+    throw new CustomError(
+      "Product already has an offer",
+      StatusCodes.BAD_REQUEST
+    );
 
   // Create the offer
   const offer = await Offer.create({
@@ -84,7 +88,7 @@ export const createOffer = async (req: Request, res: Response) => {
 export const updateOffer = async (req: Request, res: Response) => {
   const offer = await Offer.findById(req.params.id);
   if (!offer) {
-    throw new ErrorAPI("Offer not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Offer not found", StatusCodes.NOT_FOUND);
   }
 
   onlyAdminCanModify(req, offer);
@@ -95,10 +99,10 @@ export const updateOffer = async (req: Request, res: Response) => {
   if (isProductChanged) {
     const newProduct = await Product.findById(req.body.productId);
     if (!newProduct)
-      throw new ErrorAPI("New product not found", StatusCodes.NOT_FOUND);
+      throw new CustomError("New product not found", StatusCodes.NOT_FOUND);
 
     if (newProduct.offer)
-      throw new ErrorAPI(
+      throw new CustomError(
         "New product already has an offer",
         StatusCodes.CONFLICT
       );
@@ -134,7 +138,7 @@ export const updateOffer = async (req: Request, res: Response) => {
 
 export const deleteOffer = async (req: Request, res: Response) => {
   const offer = await Offer.findById(req.params.id);
-  if (!offer) throw new ErrorAPI("Offer not found", StatusCodes.NOT_FOUND);
+  if (!offer) throw new CustomError("Offer not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, offer);
 

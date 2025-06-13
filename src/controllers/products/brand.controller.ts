@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import Brand from "../../models/products/brand.model";
-import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 import {
   getPagination,
@@ -8,6 +7,7 @@ import {
   onlyAdminCanModify,
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
+import CustomError from "../../errors/custom-error";
 
 // Staff get all brands
 export const getAllBrandsForStaff = async (req: Request, res: Response) => {
@@ -61,7 +61,7 @@ export const getAllBrands = async (req: Request, res: Response) => {
 export const getBrandForStaff = async (req: Request, res: Response) => {
   const brand = await Brand.findById(req.params.id).populate("products");
 
-  if (!brand) throw new ErrorAPI("Brand not found", StatusCodes.NOT_FOUND);
+  if (!brand) throw new CustomError("Brand not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(brand);
 };
@@ -73,7 +73,7 @@ export const getBrand = async (req: Request, res: Response) => {
     cover: 1,
   });
 
-  if (!brand) throw new ErrorAPI("Brand not found", StatusCodes.NOT_FOUND);
+  if (!brand) throw new CustomError("Brand not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(brand);
 };
@@ -89,7 +89,7 @@ export const createBrand = async (req: Request, res: Response) => {
 // Update brand (staff only)
 export const updateBrand = async (req: Request, res: Response) => {
   const brand = await Brand.findById(req.params.id);
-  if (!brand) throw new ErrorAPI("Brand not found", StatusCodes.NOT_FOUND);
+  if (!brand) throw new CustomError("Brand not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanSetReadOnly(req);
   onlyAdminCanModify(req, brand);
@@ -103,7 +103,7 @@ export const updateBrand = async (req: Request, res: Response) => {
 // Delete brand (staff only)
 export const deleteBrand = async (req: Request, res: Response) => {
   const brand = await Brand.findById(req.params.id);
-  if (!brand) throw new ErrorAPI("Brand not found", StatusCodes.NOT_FOUND);
+  if (!brand) throw new CustomError("Brand not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, brand);
 

@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import SubCategory from "../../models/products/sub-category.model";
-import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 import Category from "../../models/products/category.model";
 import {
@@ -9,6 +8,7 @@ import {
   onlyAdminCanModify,
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
+import CustomError from "../../errors/custom-error";
 
 // Public get all subcategories
 export const getAllSubCategories = async (req: Request, res: Response) => {
@@ -80,7 +80,7 @@ export const getSubCategory = async (req: Request, res: Response) => {
     });
 
   if (!subcategory)
-    throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Subcategory not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(subcategory);
 };
@@ -92,7 +92,7 @@ export const getSubCategoryForStaff = async (req: Request, res: Response) => {
   );
 
   if (!subcategory)
-    throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Subcategory not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(subcategory);
 };
@@ -111,7 +111,7 @@ export const createSubCategory = async (req: Request, res: Response) => {
 export const updateSubCategory = async (req: Request, res: Response) => {
   const subcategory = await SubCategory.findById(req.params.id);
   if (!subcategory)
-    throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Subcategory not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, subcategory);
   onlyAdminCanSetReadOnly(req);
@@ -127,7 +127,7 @@ export const updateSubCategory = async (req: Request, res: Response) => {
 export const deleteSubCategory = async (req: Request, res: Response) => {
   const subcategory = await SubCategory.findById(req.params.id);
   if (!subcategory)
-    throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Subcategory not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, subcategory);
 
@@ -146,20 +146,20 @@ export const linkSubCategoryToCategory = async (
 
   const subcategory = await SubCategory.findById(subcategoryId);
   if (!subcategory) {
-    throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Subcategory not found", StatusCodes.NOT_FOUND);
   }
 
   onlyAdminCanModify(req, subcategory);
 
   if (subcategory.category)
-    throw new ErrorAPI(
+    throw new CustomError(
       "Subcategory is already linked to a category",
       StatusCodes.BAD_REQUEST
     );
 
   const category = await Category.findById(categoryId);
   if (!category)
-    throw new ErrorAPI("Category not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Category not found", StatusCodes.NOT_FOUND);
 
   subcategory.category = categoryId;
   await subcategory.save();
@@ -182,12 +182,12 @@ export const unlinkSubCategoryFromCategory = async (
     "category"
   );
   if (!subcategory)
-    throw new ErrorAPI("Subcategory not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Subcategory not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, subcategory);
 
   if (!subcategory.category)
-    throw new ErrorAPI(
+    throw new CustomError(
       "Subcategory is not linked to any category",
       StatusCodes.BAD_REQUEST
     );

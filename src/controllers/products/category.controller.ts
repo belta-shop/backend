@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import Category from "../../models/products/category.model";
-import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 import {
   getPagination,
@@ -8,6 +7,7 @@ import {
   onlyAdminCanModify,
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
+import CustomError from "../../errors/custom-error";
 
 // Public get all categories
 export const getAllCategories = async (req: Request, res: Response) => {
@@ -63,7 +63,7 @@ export const getCategory = async (req: Request, res: Response) => {
   });
 
   if (!category)
-    throw new ErrorAPI("Category not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Category not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(category);
 };
@@ -72,7 +72,7 @@ export const getCategory = async (req: Request, res: Response) => {
 export const getCategoryForStaff = async (req: Request, res: Response) => {
   const category = await Category.findById(req.params.id);
   if (!category)
-    throw new ErrorAPI("Category not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Category not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(category);
 };
@@ -89,7 +89,7 @@ export const createCategory = async (req: Request, res: Response) => {
 export const updateCategory = async (req: Request, res: Response) => {
   const category = await Category.findById(req.params.id);
   if (!category)
-    throw new ErrorAPI("Category not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Category not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, category);
   onlyAdminCanSetReadOnly(req);
@@ -104,7 +104,7 @@ export const updateCategory = async (req: Request, res: Response) => {
 export const deleteCategory = async (req: Request, res: Response) => {
   const category = await Category.findById(req.params.id);
   if (!category)
-    throw new ErrorAPI("Category not found", StatusCodes.NOT_FOUND);
+    throw new CustomError("Category not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, category);
 

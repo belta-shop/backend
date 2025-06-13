@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Tag from "../../models/products/tag.model";
 import Product from "../../models/products/product.model";
-import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 import {
   getPagination,
@@ -9,6 +8,7 @@ import {
   onlyAdminCanModify,
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
+import CustomError from "../../errors/custom-error";
 
 // Staff get all tags
 export const getAllTagsForStaff = async (req: Request, res: Response) => {
@@ -61,7 +61,7 @@ export const getAllTags = async (req: Request, res: Response) => {
 export const getTagForStaff = async (req: Request, res: Response) => {
   const tag = await Tag.findById(req.params.id).populate("products");
 
-  if (!tag) throw new ErrorAPI("Tag not found", StatusCodes.NOT_FOUND);
+  if (!tag) throw new CustomError("Tag not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(tag);
 };
@@ -72,7 +72,7 @@ export const getTag = async (req: Request, res: Response) => {
     name: req.lang === "ar" ? "$nameAr" : "$nameEn",
   });
 
-  if (!tag) throw new ErrorAPI("Tag not found", StatusCodes.NOT_FOUND);
+  if (!tag) throw new CustomError("Tag not found", StatusCodes.NOT_FOUND);
 
   res.status(StatusCodes.OK).json(tag);
 };
@@ -88,7 +88,7 @@ export const createTag = async (req: Request, res: Response) => {
 // Update tag (staff only)
 export const updateTag = async (req: Request, res: Response) => {
   const tag = await Tag.findById(req.params.id).populate("products");
-  if (!tag) throw new ErrorAPI("Tag not found", StatusCodes.NOT_FOUND);
+  if (!tag) throw new CustomError("Tag not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, tag);
   onlyAdminCanSetReadOnly(req);
@@ -102,7 +102,7 @@ export const updateTag = async (req: Request, res: Response) => {
 // Delete tag (staff only)
 export const deleteTag = async (req: Request, res: Response) => {
   const tag = await Tag.findById(req.params.id);
-  if (!tag) throw new ErrorAPI("Tag not found", StatusCodes.NOT_FOUND);
+  if (!tag) throw new CustomError("Tag not found", StatusCodes.NOT_FOUND);
 
   onlyAdminCanModify(req, tag);
 
@@ -118,13 +118,14 @@ export const linkTagToProduct = async (req: Request, res: Response) => {
   const { productId, tagId } = req.body;
 
   const product = await Product.findById(productId);
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   const tag = await Tag.findById(tagId);
-  if (!tag) throw new ErrorAPI("Tag not found", StatusCodes.NOT_FOUND);
+  if (!tag) throw new CustomError("Tag not found", StatusCodes.NOT_FOUND);
 
   if (product.tags.includes(tagId))
-    throw new ErrorAPI(
+    throw new CustomError(
       "Product is already linked to this tag",
       StatusCodes.BAD_REQUEST
     );
@@ -152,13 +153,14 @@ export const unlinkTagFromProduct = async (req: Request, res: Response) => {
   const { productId, tagId } = req.body;
 
   const product = await Product.findById(productId);
-  if (!product) throw new ErrorAPI("Product not found", StatusCodes.NOT_FOUND);
+  if (!product)
+    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
   const tag = await Tag.findById(tagId);
-  if (!tag) throw new ErrorAPI("Tag not found", StatusCodes.NOT_FOUND);
+  if (!tag) throw new CustomError("Tag not found", StatusCodes.NOT_FOUND);
 
   if (!product.tags.includes(tagId))
-    throw new ErrorAPI(
+    throw new CustomError(
       "Product is not linked to this tag",
       StatusCodes.BAD_REQUEST
     );
