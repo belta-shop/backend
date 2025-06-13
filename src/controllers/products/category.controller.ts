@@ -23,7 +23,6 @@ export const getAllCategories = async (req: Request, res: Response) => {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
-    .select("-createdAt -updatedAt")
     .select({
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
       cover: 1,
