@@ -45,13 +45,14 @@ export const getAllLabels = async (req: Request, res: Response) => {
   };
 
   const labels = await Label.find(query)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .select({
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
       color: 1,
     })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+    .select("-createdAt -updatedAt");
 
   const total = await Label.countDocuments(query);
 
@@ -69,10 +70,12 @@ export const getLabelForStaff = async (req: Request, res: Response) => {
 
 // Client get single label
 export const getLabel = async (req: Request, res: Response) => {
-  const label = await Label.findById(req.params.id).select({
-    name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-    color: 1,
-  });
+  const label = await Label.findById(req.params.id)
+    .select({
+      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+      color: 1,
+    })
+    .select("-createdAt -updatedAt");
 
   if (!label) throw new CustomError("Label not found", StatusCodes.NOT_FOUND);
 

@@ -31,6 +31,7 @@ export const getAllSubCategories = async (req: Request, res: Response) => {
       cover: 1,
       category: 1,
     })
+    .select("-createdAt -updatedAt")
     .populate("category", {
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
       cover: 1,
@@ -75,6 +76,7 @@ export const getSubCategory = async (req: Request, res: Response) => {
       cover: 1,
       category: 1,
     })
+    .select("-createdAt -updatedAt")
     .populate("category", {
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
     });

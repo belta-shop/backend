@@ -50,7 +50,8 @@ export const getAllBrands = async (req: Request, res: Response) => {
     })
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(limit);
+    .limit(limit)
+    .select("-createdAt -updatedAt");
 
   const total = await Brand.countDocuments(query);
 
@@ -68,10 +69,12 @@ export const getBrandForStaff = async (req: Request, res: Response) => {
 
 // Client get single brand
 export const getBrand = async (req: Request, res: Response) => {
-  const brand = await Brand.findById(req.params.id).select({
-    name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-    cover: 1,
-  });
+  const brand = await Brand.findById(req.params.id)
+    .select({
+      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+      cover: 1,
+    })
+    .select("-createdAt -updatedAt");
 
   if (!brand) throw new CustomError("Brand not found", StatusCodes.NOT_FOUND);
 

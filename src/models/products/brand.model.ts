@@ -2,36 +2,39 @@ import { model, Schema } from "mongoose";
 import ErrorAPI from "../../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 
-const BrandSchema = new Schema({
-  nameAr: {
-    type: String,
-    required: [true, "Arabic name is required"],
-    trim: true,
-  },
-  nameEn: {
-    type: String,
-    required: [true, "English name is required"],
-    trim: true,
-  },
-  cover: {
-    type: String,
-    required: [true, "Cover image is required"],
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  products: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Product",
+const BrandSchema = new Schema(
+  {
+    nameAr: {
+      type: String,
+      required: [true, "Arabic name is required"],
+      trim: true,
     },
-  ],
-  employeeReadOnly: {
-    type: Boolean,
-    default: false,
+    nameEn: {
+      type: String,
+      required: [true, "English name is required"],
+      trim: true,
+    },
+    cover: {
+      type: String,
+      required: [true, "Cover image is required"],
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
+    products: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
+    employeeReadOnly: {
+      type: Boolean,
+      default: false,
+    },
   },
-});
+  { timestamps: true }
+);
 
 // Prevent deletion if brand has products
 BrandSchema.pre("deleteOne", { document: true }, async function (next) {

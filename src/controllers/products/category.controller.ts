@@ -23,10 +23,12 @@ export const getAllCategories = async (req: Request, res: Response) => {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
+    .select("-createdAt -updatedAt")
     .select({
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
       cover: 1,
     })
+    .select("-createdAt -updatedAt")
     .lean();
 
   const total = await Category.countDocuments(query);
@@ -57,10 +59,12 @@ export const getAllCategoriesForStaff = async (req: Request, res: Response) => {
 
 // Public get single category
 export const getCategory = async (req: Request, res: Response) => {
-  const category = await Category.findById(req.params.id).select({
-    name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-    cover: 1,
-  });
+  const category = await Category.findById(req.params.id)
+    .select({
+      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+      cover: 1,
+    })
+    .select("-createdAt -updatedAt");
 
   if (!category)
     throw new CustomError("Category not found", StatusCodes.NOT_FOUND);

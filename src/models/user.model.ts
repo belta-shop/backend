@@ -3,34 +3,40 @@ import { emailRegex } from "../config/regex";
 import ErrorAPI from "../errors/error-api";
 import { StatusCodes } from "http-status-codes";
 
-const UserSchema = new Schema({
-  fullName: {
-    type: String,
-    required: [true, "Full name is required"],
-    trim: true,
-  },
-  email: {
-    type: String,
-    required: [true, "Email is required"],
-    match: [emailRegex, "Please enter a valid email"],
-    index: {
-      unique: true,
+const UserSchema = new Schema(
+  {
+    fullName: {
+      type: String,
+      required: [true, "Full name is required"],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      match: [emailRegex, "Please enter a valid email"],
+      index: {
+        unique: true,
+      },
+    },
+    confirmed: {
+      type: Boolean,
+      default: false,
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+    },
+    role: {
+      type: String,
+      enum: {
+        values: ["client", "employee", "admin"],
+        message: "Invalid role",
+      },
+      required: [true, "Role is required"],
     },
   },
-  confirmed: {
-    type: Boolean,
-    default: false,
-  },
-  password: {
-    type: String,
-    required: [true, "Password is required"],
-  },
-  role: {
-    type: String,
-    enum: { values: ["client", "employee", "admin"], message: "Invalid role" },
-    required: [true, "Role is required"],
-  },
-});
+  { timestamps: true }
+);
 
 UserSchema.post("save", function (error: any, doc: any, next: any) {
   if (error.code === 11000) {

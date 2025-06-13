@@ -48,6 +48,7 @@ export const getAllTags = async (req: Request, res: Response) => {
     .select({
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
     })
+    .select("-createdAt -updatedAt")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
@@ -68,9 +69,11 @@ export const getTagForStaff = async (req: Request, res: Response) => {
 
 // Client get single tag
 export const getTag = async (req: Request, res: Response) => {
-  const tag = await Tag.findById(req.params.id).select({
-    name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-  });
+  const tag = await Tag.findById(req.params.id)
+    .select({
+      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+    })
+    .select("-createdAt -updatedAt");
 
   if (!tag) throw new CustomError("Tag not found", StatusCodes.NOT_FOUND);
 

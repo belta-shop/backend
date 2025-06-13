@@ -57,6 +57,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
       price: 1,
       minPrice: 1,
     })
+    .select("-createdAt -updatedAt")
     .populate("brand", {
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
       logo: 1,
@@ -161,6 +162,7 @@ export const getProduct = async (req: Request, res: Response) => {
       price: 1,
       minPrice: 1,
     })
+    .select("-createdAt -updatedAt")
     .populate("brand", {
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
       cover: 1,
