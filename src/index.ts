@@ -6,12 +6,14 @@ import router from "./routes";
 import { ErrorHandler } from "./middleware/error-handler";
 import { languageMiddleware } from "./middleware/language";
 import cors from "cors";
+import bodyParser from "body-parser";
 
 const app = express();
 const port = process.env.PORT || 5006;
 
 app.set("trust proxy", true);
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 app.use(languageMiddleware);
 app.use(router);

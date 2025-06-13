@@ -8,7 +8,8 @@
     "same_password": "The new password cannot be the same as your current password.",
     "category_has_subcategories": "Cannot delete category because it has subcategories.",
     "subcategory_has_products": "Cannot delete subcategory because it has products.",
-    "brand_has_products": "Cannot delete brand because it has products."
+    "brand_has_products": "Cannot delete brand because it has products.",
+    "file_too_large": "File size is too large."
   },
   "Email": {
     "OTP": {
