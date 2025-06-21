@@ -58,27 +58,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
       disabled: 1,
       price: 1,
       finalPrice: 1,
-    })
-    .select("-createdAt -updatedAt")
-    .populate("brand", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      logo: 1,
-    })
-    .populate("subcategory", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      cover: 1,
-    })
-    .populate("labels", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      color: 1,
-    })
-    .populate("tags", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-    })
-    .populate("offer", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
     });
-
   const total = await Product.countDocuments(query);
 
   res.status(StatusCodes.OK).json({ items: products, total });
