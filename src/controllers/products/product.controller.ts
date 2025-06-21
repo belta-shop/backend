@@ -10,6 +10,7 @@ import SubCategory from "../../models/products/sub-category.model";
 import Brand from "../../models/products/brand.model";
 import { IOffer } from "../../types/products";
 import CustomError from "../../errors/custom-error";
+import { getAggregatedLookup } from "../../utils/models";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -20,17 +21,25 @@ export const getAllProducts = async (req: Request, res: Response) => {
     disabled: false,
   };
 
-  console.log(search, query);
-
   // handle Search for name and tags using same search query
   if (typeof search === "string" && search) {
     query.$or = [
       { nameAr: { $regex: search, $options: "i" } },
       { nameEn: { $regex: search, $options: "i" } },
-      { tags: { $elemMatch: { nameAr: { $regex: search, $options: "i" } } } },
-      { tags: { $elemMatch: { nameEn: { $regex: search, $options: "i" } } } },
-      { brand: { nameAr: { $regex: search, $options: "i" } } },
-      { brand: { nameEn: { $regex: search, $options: "i" } } },
+      { "brand.nameAr": { $regex: search, $options: "i" } },
+      { "brand.nameEn": { $regex: search, $options: "i" } },
+      { "subcategory.nameAr": { $regex: search, $options: "i" } },
+      { "subcategory.nameEn": { $regex: search, $options: "i" } },
+      {
+        tags: {
+          $elemMatch: {
+            $or: [
+              { nameAr: { $regex: search, $options: "i" } },
+              { nameEn: { $regex: search, $options: "i" } },
+            ],
+          },
+        },
+      },
     ];
   }
 
@@ -39,90 +48,162 @@ export const getAllProducts = async (req: Request, res: Response) => {
   if (label) query.labels = label;
   if (tag) query.tags = tag;
 
-  const products = await Product.find(query)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .select({
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      description: req.lang === "ar" ? "$descriptionAr" : "$descriptionEn",
-      coverList: 1,
-      rating: 1,
-      reviews: 1,
-      offer: 1,
-      brand: 1,
-      subcategory: 1,
-      labels: 1,
-      tags: 1,
-      quantity: 1,
-      disabled: 1,
-      price: 1,
-      finalPrice: 1,
-    });
-  const total = await Product.countDocuments(query);
+  const lookup = getAggregatedLookup([
+    { collection: "brands", fieldName: "brand", isArray: false },
+    { collection: "offers", fieldName: "offer", isArray: false },
+    { collection: "subcategories", fieldName: "subcategory", isArray: false },
+    { collection: "tags", fieldName: "tags", isArray: true },
+  ]);
 
-  res.status(StatusCodes.OK).json({ items: products, total });
+  const data = await Product.aggregate([
+    ...lookup,
+    {
+      $match: query,
+    },
+    {
+      $facet: {
+        metadata: [
+          { $count: "total" },
+          { $addFields: { page: skip / limit + 1, limit } },
+        ],
+        data: [
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+          {
+            $project: {
+              name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+              description:
+                req.lang === "ar" ? "$descriptionAr" : "$descriptionEn",
+              coverList: 1,
+              rating: 1,
+              reviews: 1,
+              offer: 1,
+              brand: 1,
+              subcategory: 1,
+              labels: 1,
+              tags: 1,
+              quantity: 1,
+              disabled: 1,
+              price: 1,
+              finalPrice: 1,
+            },
+          },
+        ],
+      },
+    },
+    { $unwind: "$metadata" },
+    {
+      $project: {
+        data: 1,
+        metadata: 1,
+      },
+    },
+  ]);
+
+  res.status(StatusCodes.OK).json(data);
 };
 
 // Staff get all products
 export const getAllProductsForStaff = async (req: Request, res: Response) => {
-  const { search, disabled, brand, subcategory, label, tag, employeeReadOnly } =
-    req.query;
+  const {
+    search,
+    disabled,
+    brand,
+    subcategory,
+    label,
+    tag,
+    employeeReadOnly,
+    offer,
+  } = req.query;
   const { skip, limit } = getPagination(req.query);
 
   let query: any = {};
 
-  // handle Search for name and tags using different queries
-  const isSearch = typeof search === "string" && search;
-  const isTag = typeof tag === "string" && tag;
-  const isBrand = typeof brand === "string" && brand;
-
-  if (isSearch || isTag) {
-    let or: any[] = [];
-    if (isSearch) {
-      or = [
-        { nameAr: { $regex: search, $options: "i" } },
-        { nameEn: { $regex: search, $options: "i" } },
-      ];
-    }
-    if (isTag) {
-      or.push({
-        tags: { $elemMatch: { nameAr: { $regex: tag, $options: "i" } } },
-      });
-      or.push({
-        tags: { $elemMatch: { nameEn: { $regex: tag, $options: "i" } } },
-      });
-    }
-    if (isBrand) {
-      or.push({
-        brand: { nameAr: { $regex: brand, $options: "i" } },
-      });
-      or.push({
-        brand: { nameEn: { $regex: brand, $options: "i" } },
-      });
-    }
-    query.$or = or;
-  }
+  if (search)
+    query.$or = [
+      { nameAr: { $regex: search, $options: "i" } },
+      { nameEn: { $regex: search, $options: "i" } },
+    ];
 
   if (disabled !== undefined) query.disabled = disabled === "true";
+  if (tag) {
+    query.tags = {
+      $elemMatch: {
+        _id: tag,
+      },
+    };
+  }
+  if (brand) query.brand = brand;
   if (subcategory) query.subcategory = subcategory;
   if (label) query.labels = label;
   if (employeeReadOnly !== undefined)
     query.employeeReadOnly = employeeReadOnly === "true";
+  if (offer) query.offer = offer;
 
-  const products = await Product.find(query)
-    .populate("brand")
-    .populate("subcategory")
-    .populate("labels")
-    .populate("tags")
-    .populate("offer.offer")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  const lookup = getAggregatedLookup([
+    { collection: "brands", fieldName: "brand", isArray: false },
+    { collection: "offers", fieldName: "offer", isArray: false },
+    { collection: "subcategories", fieldName: "subcategory", isArray: false },
+    { collection: "tags", fieldName: "tags", isArray: true },
+  ]);
 
-  const total = await Product.countDocuments(query);
+  const data = await Product.aggregate([
+    ...lookup,
+    {
+      $match: query,
+    },
+    {
+      $facet: {
+        metadata: [
+          { $count: "total" },
+          { $addFields: { page: skip / limit + 1, limit } },
+        ],
+        data: [
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+          {
+            $project: {
+              nameAr: 1,
+              nameEn: 1,
+              descriptionAr: 1,
+              descriptionEn: 1,
+              coverList: 1,
+              rating: 1,
+              reviews: 1,
+              offer: 1,
+              brand: 1,
+              subcategory: 1,
+              labels: 1,
+              tags: 1,
+              quantity: 1,
+              disabled: 1,
+              price: 1,
+              finalPrice: 1,
+            },
+          },
+        ],
+      },
+    },
+    { $unwind: "$metadata" },
+    {
+      $project: {
+        data: 1,
+        metadata: 1,
+      },
+    },
+  ]);
 
-  res.status(StatusCodes.OK).json({ items: products, total });
+  res.status(StatusCodes.OK).json(data[0]);
 };
 
 // Public get single product
