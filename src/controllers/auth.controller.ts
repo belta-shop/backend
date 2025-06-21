@@ -16,9 +16,14 @@ import { sendOtp } from "../utils/otp";
 import { sendOTPMail } from "../utils/email";
 import Unauthorized from "../errors/unauthorized";
 import Token from "../models/token.model";
+import CustomError from "../errors/custom-error";
 
 export const register = async (req: Request, res: Response) => {
   // Create User
+
+  if (req.body.role === "admin")
+    throw new CustomError("admin is not supported", StatusCodes.BAD_REQUEST);
+
   const hashed = hashPaswword(req.body.password);
   await User.create({
     ...req.body,

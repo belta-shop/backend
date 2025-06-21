@@ -30,7 +30,7 @@ const UserSchema = new Schema(
       type: String,
       enum: {
         values: ["client", "employee", "admin"],
-        message: "Invalid role",
+        message: '{VALUE} is not supported',
       },
       required: [true, "Role is required"],
     },
