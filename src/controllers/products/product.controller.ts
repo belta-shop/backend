@@ -20,6 +20,8 @@ export const getAllProducts = async (req: Request, res: Response) => {
     disabled: false,
   };
 
+  console.log(search, query);
+
   // handle Search for name and tags using same search query
   if (typeof search === "string" && search) {
     query.$or = [
