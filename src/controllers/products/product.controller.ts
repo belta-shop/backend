@@ -105,7 +105,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
     },
   ]);
 
-  res.status(StatusCodes.OK).json(data);
+  res.status(StatusCodes.OK).json(data[0]);
 };
 
 // Staff get all products
