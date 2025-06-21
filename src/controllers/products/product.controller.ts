@@ -105,7 +105,12 @@ export const getAllProducts = async (req: Request, res: Response) => {
     },
   ]);
 
-  res.status(StatusCodes.OK).json(data[0]);
+  res.status(StatusCodes.OK).json(
+    data[0] || {
+      data: [],
+      metadata: { total: 0, page: skip / limit + 1, limit },
+    }
+  );
 };
 
 // Staff get all products
@@ -203,7 +208,12 @@ export const getAllProductsForStaff = async (req: Request, res: Response) => {
     },
   ]);
 
-  res.status(StatusCodes.OK).json(data[0]);
+  res.status(StatusCodes.OK).json(
+    data[0] || {
+      data: [],
+      metadata: { total: 0, page: skip / limit + 1, limit },
+    }
+  );
 };
 
 // Public get single product
