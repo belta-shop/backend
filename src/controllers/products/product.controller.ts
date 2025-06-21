@@ -55,7 +55,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
       quantity: 1,
       disabled: 1,
       price: 1,
-      minPrice: 1,
+      finalPrice: 1,
     })
     .select("-createdAt -updatedAt")
     .populate("brand", {
@@ -160,7 +160,7 @@ export const getProduct = async (req: Request, res: Response) => {
       quantity: 1,
       disabled: 1,
       price: 1,
-      minPrice: 1,
+      finalPrice: 1,
     })
     .select("-createdAt -updatedAt")
     .populate("brand", {
