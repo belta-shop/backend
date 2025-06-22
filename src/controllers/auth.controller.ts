@@ -153,6 +153,25 @@ export const resendOTP = async (
   });
 };
 
+export const sendGuestOtp = async (
+  req: Request<{}, {}, { purpose: OTPPurpose; email: string }>,
+  res: Response
+) => {
+  const { purpose, email } = req.body;
+
+  await sendOtp({
+    email,
+    purpose,
+    ip: req.ip,
+    userAgent: req.headers["user-agent"],
+    lang: req.headers["accept-language"],
+  });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+  });
+};
+
 export const verifyOTP = async (
   req: Request<{}, {}, { otp: string; purpose: OTPPurpose }>,
   res: Response
@@ -160,6 +179,54 @@ export const verifyOTP = async (
   if (!req.currentUser) throw new Unauthorized();
   const { sub, email, role } = req.currentUser;
   const { otp, purpose } = req.body;
+
+  if (!email || !otp || !purpose)
+    throw new BadRequest("email, otp and purpose are required");
+
+  // default otp: that will be used for testing
+  if (otp !== "1111") {
+    const otpDoc = await OTP.findOne({ email });
+    if (
+      !otpDoc ||
+      otp !== otpDoc.value ||
+      req.ip !== otpDoc.ipAddress ||
+      req.headers["user-agent"] !== otpDoc.userAgent ||
+      purpose !== otpDoc.purpose
+    )
+      throw new ErrorAPI("invalid_otp", StatusCodes.UNAUTHORIZED);
+  }
+
+  await OTP.deleteOne({ email });
+
+  if (purpose === OTPPurpose.EmailConfirmation) {
+    await User.updateOne({ email }, { confirmed: true });
+  } else if (purpose === OTPPurpose.ResetPassword) {
+    const resetPasswordToken = await signPurposeToken({
+      id: sub,
+      email,
+      role,
+      purpose: OTPPurpose.ResetPassword,
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      resetPasswordToken,
+    });
+  }
+  res.status(StatusCodes.OK).json({
+    success: true,
+  });
+};
+
+export const verifyGuestOtp = async (
+  req: Request<{}, {}, { otp: string; purpose: OTPPurpose; email: string }>,
+  res: Response
+) => {
+  const { otp, email, purpose } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) throw new Unauthorized();
+  const { _id, role } = user;
+  const sub = _id.toString();
 
   if (!email || !otp || !purpose)
     throw new BadRequest("email, otp and purpose are required");
