@@ -16,18 +16,8 @@ router.post("/login", login);
 router.post("/refresh-token", refreshAccessToken);
 router.post("/send-otp", authMiddleware, resendOTP);
 router.post("/verify-otp", authMiddleware, verifyOTP);
-router.post(
-  "/send-guest-otp",
-  getUserByEmailMiddleware,
-  authMiddleware,
-  resendOTP
-);
-router.post(
-  "/verify-guest-otp",
-  getUserByEmailMiddleware,
-  authMiddleware,
-  verifyOTP
-);
+router.post("/send-guest-otp", getUserByEmailMiddleware, resendOTP);
+router.post("/verify-guest-otp", getUserByEmailMiddleware, verifyOTP);
 router.post("/reset-password", authMiddleware, resetPassword);
 
 export default router;
