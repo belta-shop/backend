@@ -1,6 +1,8 @@
 import { Request } from "express";
 import { DEFAULT_LIMIT, DEFAULT_PAGE } from "../config/global";
 import Unauthorized from "../errors/unauthorized";
+import ErrorAPI from "../errors/error-api";
+import { StatusCodes } from "http-status-codes";
 
 export function getSearchQuery(search: any, keys: string[]) {
   if (typeof search !== "string" || !search) return {};
@@ -25,7 +27,7 @@ export function onlyAdminCanModify(
   document: { employeeReadOnly: boolean }
 ) {
   if (document.employeeReadOnly && req.currentUser?.role !== "admin") {
-    throw new Unauthorized("Only admin can modify or delete this document");
+    throw new ErrorAPI("only_admin_can_modify", StatusCodes.UNAUTHORIZED);
   }
 }
 

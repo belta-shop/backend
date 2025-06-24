@@ -9,7 +9,8 @@
     "category_has_subcategories": "Cannot delete category because it has subcategories.",
     "subcategory_has_products": "Cannot delete subcategory because it has products.",
     "brand_has_products": "Cannot delete brand because it has products.",
-    "file_too_large": "File size is too large."
+    "file_too_large": "File size is too large.",
+    "only_admin_can_modify": "Only admin can modify or delete this Item."
   },
   "Email": {
     "OTP": {
