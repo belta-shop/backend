@@ -73,7 +73,9 @@ export const getCategory = async (req: Request, res: Response) => {
 
 // Staff get single category
 export const getCategoryForStaff = async (req: Request, res: Response) => {
-  const category = await Category.findById(req.params.id);
+  const category = await Category.findById(req.params.id).populate(
+    "subcategories"
+  );
   if (!category)
     throw new CustomError("Category not found", StatusCodes.NOT_FOUND);
 
