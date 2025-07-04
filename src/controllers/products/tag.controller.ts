@@ -60,7 +60,10 @@ export const getAllTags = async (req: Request, res: Response) => {
 
 // Staff get single tag
 export const getTagForStaff = async (req: Request, res: Response) => {
-  const tag = await Tag.findById(req.params.id).populate("products");
+  const tag = await Tag.findById(req.params.id).populate({
+    path: "products",
+    populate: [{ path: "brand" }, { path: "subcategory" }],
+  });
 
   if (!tag) throw new CustomError("Tag not found", StatusCodes.NOT_FOUND);
 

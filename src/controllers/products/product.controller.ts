@@ -299,7 +299,6 @@ export const updateProduct = async (req: Request, res: Response) => {
 
   onlyAdminCanModify(req, product);
   onlyAdminCanSetReadOnly(req);
-
   Object.assign(product, req.body);
   await product.save();
   await product.populate([
@@ -447,16 +446,16 @@ export const linkProductToBrand = async (req: Request, res: Response) => {
 };
 
 export const unlinkProductFromBrand = async (req: Request, res: Response) => {
-  const { productId, brandId } = req.body;
+  const { productId } = req.body;
 
   const product = await Product.findById(productId);
   if (!product)
     throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
-  const brand = await Brand.findById(brandId);
+  const brand = await Brand.findById(product.brand);
   if (!brand) throw new CustomError("Brand not found", StatusCodes.NOT_FOUND);
 
-  if (!product.brand || product.brand.toString() !== brandId)
+  if (!product.brand)
     throw new CustomError(
       "Product is not linked to this brand",
       StatusCodes.BAD_REQUEST

@@ -25,8 +25,7 @@ export const getAllBrandsForStaff = async (req: Request, res: Response) => {
   const brands = await Brand.find(query)
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(limit)
-    .populate("products");
+    .limit(limit);
 
   const total = await Brand.countDocuments(query);
 
@@ -60,7 +59,14 @@ export const getAllBrands = async (req: Request, res: Response) => {
 
 // Staff get single brand
 export const getBrandForStaff = async (req: Request, res: Response) => {
-  const brand = await Brand.findById(req.params.id).populate("products");
+  const brand = await Brand.findById(req.params.id).populate({
+    path: "products",
+    populate: [
+      {
+        path: "subcategory",
+      },
+    ],
+  });
 
   if (!brand) throw new CustomError("Brand not found", StatusCodes.NOT_FOUND);
 
@@ -74,6 +80,7 @@ export const getBrand = async (req: Request, res: Response) => {
       name: req.lang === "ar" ? "$nameAr" : "$nameEn",
       cover: 1,
     })
+    .populate("products")
     .select("-createdAt -updatedAt");
 
   if (!brand) throw new CustomError("Brand not found", StatusCodes.NOT_FOUND);

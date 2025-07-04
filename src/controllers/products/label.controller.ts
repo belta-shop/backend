@@ -61,7 +61,10 @@ export const getAllLabels = async (req: Request, res: Response) => {
 
 // Staff get single label
 export const getLabelForStaff = async (req: Request, res: Response) => {
-  const label = await Label.findById(req.params.id).populate("products");
+  const label = await Label.findById(req.params.id).populate({
+    path: "products",
+    populate: [{ path: "brand" }, { path: "subcategory" }],
+  });
 
   if (!label) throw new CustomError("Label not found", StatusCodes.NOT_FOUND);
 

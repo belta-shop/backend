@@ -26,7 +26,7 @@ export const getAllOffers = async (req: Request, res: Response) => {
     query.employeeReadOnly = employeeReadOnly === "true";
 
   const offers = await Offer.find(query)
-    .populate("product", "nameAr nameEn price finalPrice")
+    .populate("product", "coverList nameAr nameEn price finalPrice")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
@@ -38,10 +38,7 @@ export const getAllOffers = async (req: Request, res: Response) => {
 
 // Get single offer (staff only)
 export const getOffer = async (req: Request, res: Response) => {
-  const offer = await Offer.findById(req.params.id).populate(
-    "product",
-    "nameAr nameEn price finalPrice"
-  );
+  const offer = await Offer.findById(req.params.id).populate("product");
 
   if (!offer) {
     throw new CustomError("Offer not found", StatusCodes.NOT_FOUND);

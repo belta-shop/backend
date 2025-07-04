@@ -89,9 +89,17 @@ export const getSubCategory = async (req: Request, res: Response) => {
 
 // Staff get single subcategory
 export const getSubCategoryForStaff = async (req: Request, res: Response) => {
-  const subcategory = await SubCategory.findById(req.params.id).populate(
-    "category"
-  );
+  const subcategory = await SubCategory.findById(req.params.id).populate([
+    { path: "category" },
+    {
+      path: "products",
+      populate: [
+        {
+          path: "brand",
+        },
+      ],
+    },
+  ]);
 
   if (!subcategory)
     throw new CustomError("Subcategory not found", StatusCodes.NOT_FOUND);
