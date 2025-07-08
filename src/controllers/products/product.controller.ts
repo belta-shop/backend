@@ -53,6 +53,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
     { collection: "offers", fieldName: "offer", isArray: false },
     { collection: "subcategories", fieldName: "subcategory", isArray: false },
     { collection: "tags", fieldName: "tags", isArray: true },
+    { collection: "labels", fieldName: "labels", isArray: true },
   ]);
 
   const data = await Product.aggregate([
@@ -83,10 +84,39 @@ export const getAllProducts = async (req: Request, res: Response) => {
               rating: 1,
               reviews: 1,
               offer: 1,
-              brand: 1,
-              subcategory: 1,
-              labels: 1,
-              tags: 1,
+              brand: {
+                _id: 1,
+                name: req.lang === "ar" ? "$brand.nameAr" : "$brand.nameEn",
+              },
+              subcategory: {
+                _id: 1,
+                name:
+                  req.lang === "ar"
+                    ? "$subcategory.nameAr"
+                    : "$subcategory.nameEn",
+              },
+              labels: {
+                $map: {
+                  input: "$labels",
+                  as: "label",
+                  in: {
+                    _id: "$$label._id",
+                    name:
+                      req.lang === "ar" ? "$$label.nameAr" : "$$label.nameEn",
+                    color: "$$label.color",
+                  },
+                },
+              },
+              tags: {
+                $map: {
+                  input: "$tags",
+                  as: "tag",
+                  in: {
+                    _id: "$$tag._id",
+                    name: req.lang === "ar" ? "$$tag.nameAr" : "$$tag.nameEn",
+                  },
+                },
+              },
               quantity: 1,
               disabled: 1,
               price: 1,
@@ -236,24 +266,41 @@ export const getProduct = async (req: Request, res: Response) => {
       finalPrice: 1,
     })
     .select("-createdAt -updatedAt")
-    .populate("brand", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      cover: 1,
-    })
-    .populate("subcategory", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      cover: 1,
-    })
-    .populate("labels", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      color: 1,
-    })
-    .populate("tags", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-    })
-    .populate("offer", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-    });
+    .populate([
+      {
+        path: "brand",
+        select: {
+          name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+          cover: 1,
+        },
+      },
+      {
+        path: "subcategory",
+        select: {
+          name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+          cover: 1,
+        },
+      },
+      {
+        path: "labels",
+        select: {
+          name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+          color: 1,
+        },
+      },
+      {
+        path: "tags",
+        select: {
+          name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+        },
+      },
+      {
+        path: "offer",
+        select: {
+          name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+        },
+      },
+    ]);
 
   if (!product)
     throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
