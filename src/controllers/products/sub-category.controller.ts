@@ -9,7 +9,11 @@ import {
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import CustomError from "../../errors/custom-error";
-import { getAggregatedLookup, getPaginationPipline } from "../../utils/models";
+import {
+  emptyPaginationList,
+  getAggregatedLookup,
+  getPaginationPipline,
+} from "../../utils/models";
 
 // Public get all subcategories
 export const getAllSubCategories = async (req: Request, res: Response) => {
@@ -25,11 +29,10 @@ export const getAllSubCategories = async (req: Request, res: Response) => {
 
   const data = await SubCategory.aggregate(
     getPaginationPipline({
+      beforePipline: [{ $match: query }, { $sort: { createdAt: -1 } }],
       skip,
       limit,
-      beforePipline: [{ $match: query }],
       dataPipline: [
-        { $sort: { createdAt: -1 } },
         {
           $project: {
             name: req.lang === "ar" ? "$nameAr" : "$nameEn",
@@ -41,7 +44,7 @@ export const getAllSubCategories = async (req: Request, res: Response) => {
     })
   );
 
-  res.status(StatusCodes.OK).json(data[0]);
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Staff get all subcategories
@@ -59,15 +62,38 @@ export const getAllSubCategoriesForStaff = async (
   if (employeeReadOnly !== undefined)
     query.employeeReadOnly = employeeReadOnly === "true";
 
-  const subcategories = await SubCategory.find(query)
-    .populate("category", "nameAr nameEn")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  const data = await SubCategory.aggregate(
+    getPaginationPipline({
+      beforePipline: [
+        getAggregatedLookup([
+          { collection: "categories", fieldName: "category", isArray: false },
+        ]),
+        { $match: query },
+        { $sort: { createdAt: -1 } },
+      ],
+      skip,
+      limit,
+      dataPipline: [
+        {
+          $project: {
+            nameAr: 1,
+            nameEn: 1,
+            cover: 1,
+            disabled: 1,
+            employeeReadOnly: 1,
+            products: 1,
+            category: {
+              _id: 1,
+              nameAr: 1,
+              nameEn: 1,
+            },
+          },
+        },
+      ],
+    })
+  );
 
-  const total = await SubCategory.countDocuments(query);
-
-  res.status(StatusCodes.OK).json({ items: subcategories, total });
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Public get single subcategory

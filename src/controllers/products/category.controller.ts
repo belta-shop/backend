@@ -8,7 +8,7 @@ import {
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import CustomError from "../../errors/custom-error";
-import { getPaginationPipline } from "../../utils/models";
+import { emptyPaginationList, getPaginationPipline } from "../../utils/models";
 
 // Public get all categories
 export const getAllCategories = async (req: Request, res: Response) => {
@@ -22,11 +22,10 @@ export const getAllCategories = async (req: Request, res: Response) => {
 
   const data = await Category.aggregate(
     getPaginationPipline({
+      beforePipline: [{ $match: query }, { $sort: { createdAt: -1 } }],
       skip,
       limit,
-      beforePipline: [{ $match: query }],
       dataPipline: [
-        { $sort: { createdAt: -1 } },
         {
           $project: {
             name: req.lang === "ar" ? "$nameAr" : "$nameEn",
@@ -37,7 +36,7 @@ export const getAllCategories = async (req: Request, res: Response) => {
     })
   );
 
-  res.status(StatusCodes.OK).json(data[0]);
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Staff get all categories
@@ -51,14 +50,27 @@ export const getAllCategoriesForStaff = async (req: Request, res: Response) => {
   if (employeeReadOnly !== undefined)
     query.employeeReadOnly = employeeReadOnly === "true";
 
-  const categories = await Category.find(query)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  const data = await Category.aggregate(
+    getPaginationPipline({
+      beforePipline: [{ $match: query }, { $sort: { createdAt: -1 } }],
+      skip,
+      limit,
+      dataPipline: [
+        {
+          $project: {
+            nameAr: 1,
+            nameEn: 1,
+            cover: 1,
+            subcategories: 1,
+            disabled: 1,
+            employeeReadOnly: 1,
+          },
+        },
+      ],
+    })
+  );
 
-  const total = await Category.countDocuments(query);
-
-  res.status(StatusCodes.OK).json({ items: categories, total });
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Public get single category

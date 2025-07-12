@@ -9,6 +9,11 @@ import {
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import CustomError from "../../errors/custom-error";
+import {
+  emptyPaginationList,
+  getAggregatedLookup,
+  getPaginationPipline,
+} from "../../utils/models";
 
 // Get all offers (staff only)
 export const getAllOffers = async (req: Request, res: Response) => {
@@ -25,15 +30,39 @@ export const getAllOffers = async (req: Request, res: Response) => {
   if (employeeReadOnly !== undefined)
     query.employeeReadOnly = employeeReadOnly === "true";
 
-  const offers = await Offer.find(query)
-    .populate("product", "coverList nameAr nameEn price finalPrice")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  const data = await Offer.aggregate(
+    getPaginationPipline({
+      beforePipline: [{ $match: query }, { $sort: { createdAt: -1 } }],
+      skip,
+      limit,
+      dataPipline: [
+        {
+          $project: {
+            nameAr: 1,
+            nameEn: 1,
+            color: 1,
+            product: {
+              _id: 1,
+              nameAr: 1,
+              nameEn: 1,
+              coverList: 1,
+              price: 1,
+              finalPrice: 1,
+            },
+            employeeReadOnly: 1,
+            offerQuantity: 1,
+            maxPerClient: 1,
+            quantityPurchased: 1,
+            disabled: 1,
+            type: 1,
+            value: 1,
+          },
+        },
+      ],
+    })
+  );
 
-  const total = await Offer.countDocuments(query);
-
-  res.status(StatusCodes.OK).json({ items: offers, total });
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Get single offer (staff only)

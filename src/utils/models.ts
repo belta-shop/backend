@@ -61,3 +61,14 @@ export function getPaginationPipline({
     },
   ];
 }
+
+export const emptyPaginationList = (skip: number, limit: number) => {
+  return {
+    data: [],
+    metadata: {
+      total: 0,
+      page: skip / limit + 1,
+      limit,
+    },
+  };
+};

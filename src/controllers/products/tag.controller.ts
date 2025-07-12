@@ -9,7 +9,7 @@ import {
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import CustomError from "../../errors/custom-error";
-import { getPaginationPipline } from "../../utils/models";
+import { emptyPaginationList, getPaginationPipline } from "../../utils/models";
 
 // Staff get all tags
 export const getAllTagsForStaff = async (req: Request, res: Response) => {
@@ -24,15 +24,26 @@ export const getAllTagsForStaff = async (req: Request, res: Response) => {
   if (employeeReadOnly !== undefined)
     query.employeeReadOnly = employeeReadOnly === "true";
 
-  const tags = await Tag.find(query)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .populate("products");
+  const data = await Tag.aggregate(
+    getPaginationPipline({
+      beforePipline: [{ $match: query }, { $sort: { createdAt: -1 } }],
+      skip,
+      limit,
+      dataPipline: [
+        {
+          $project: {
+            nameAr: 1,
+            nameEn: 1,
+            disabled: 1,
+            employeeReadOnly: 1,
+            products: 1,
+          },
+        },
+      ],
+    })
+  );
 
-  const total = await Tag.countDocuments(query);
-
-  res.status(StatusCodes.OK).json({ items: tags, total });
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Client get all tags
@@ -47,11 +58,10 @@ export const getAllTags = async (req: Request, res: Response) => {
 
   const data = await Tag.aggregate(
     getPaginationPipline({
+      beforePipline: [{ $match: query }, { $sort: { createdAt: -1 } }],
       skip,
       limit,
-      beforePipline: [{ $match: query }],
       dataPipline: [
-        { $sort: { createdAt: -1 } },
         {
           $project: {
             name: req.lang === "ar" ? "$nameAr" : "$nameEn",
@@ -61,7 +71,7 @@ export const getAllTags = async (req: Request, res: Response) => {
     })
   );
 
-  res.status(StatusCodes.OK).json(data[0]);
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Staff get single tag

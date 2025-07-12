@@ -8,7 +8,7 @@ import {
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import CustomError from "../../errors/custom-error";
-import { getPaginationPipline } from "../../utils/models";
+import { emptyPaginationList, getPaginationPipline } from "../../utils/models";
 
 // Staff get all brands
 export const getAllBrandsForStaff = async (req: Request, res: Response) => {
@@ -23,14 +23,27 @@ export const getAllBrandsForStaff = async (req: Request, res: Response) => {
   if (employeeReadOnly !== undefined)
     query.employeeReadOnly = employeeReadOnly === "true";
 
-  const brands = await Brand.find(query)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  const data = await Brand.aggregate(
+    getPaginationPipline({
+      beforePipline: [{ $match: query }, { $sort: { createdAt: -1 } }],
+      skip,
+      limit,
+      dataPipline: [
+        {
+          $project: {
+            nameAr: 1,
+            nameEn: 1,
+            cover: 1,
+            disabled: 1,
+            employeeReadOnly: 1,
+            products: 1,
+          },
+        },
+      ],
+    })
+  );
 
-  const total = await Brand.countDocuments(query);
-
-  res.status(StatusCodes.OK).json({ items: brands, total });
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Client get all brands
@@ -44,11 +57,10 @@ export const getAllBrands = async (req: Request, res: Response) => {
   };
   const data = await Brand.aggregate(
     getPaginationPipline({
+      beforePipline: [{ $match: query }, { $sort: { createdAt: -1 } }],
       skip,
       limit,
-      beforePipline: [{ $match: query }],
       dataPipline: [
-        { $sort: { createdAt: -1 } },
         {
           $project: {
             name: req.lang === "ar" ? "$nameAr" : "$nameEn",
@@ -59,7 +71,7 @@ export const getAllBrands = async (req: Request, res: Response) => {
     })
   );
 
-  res.status(StatusCodes.OK).json(data[0]);
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Staff get single brand

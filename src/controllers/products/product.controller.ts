@@ -10,7 +10,11 @@ import SubCategory from "../../models/products/sub-category.model";
 import Brand from "../../models/products/brand.model";
 import { IOffer } from "../../types/products";
 import CustomError from "../../errors/custom-error";
-import { getAggregatedLookup, getPaginationPipline } from "../../utils/models";
+import {
+  emptyPaginationList,
+  getAggregatedLookup,
+  getPaginationPipline,
+} from "../../utils/models";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -58,11 +62,14 @@ export const getAllProducts = async (req: Request, res: Response) => {
 
   const data = await Product.aggregate(
     getPaginationPipline({
+      beforePipline: [
+        ...lookup,
+        { $match: query },
+        { $sort: { createdAt: -1 } },
+      ],
       skip,
       limit,
-      beforePipline: [...lookup, { $match: query }],
       dataPipline: [
-        { $sort: { createdAt: -1 } },
         {
           $project: {
             name: req.lang === "ar" ? "$nameAr" : "$nameEn",
@@ -114,7 +121,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
     })
   );
 
-  res.status(StatusCodes.OK).json(data[0]);
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Staff get all products
@@ -161,63 +168,41 @@ export const getAllProductsForStaff = async (req: Request, res: Response) => {
     { collection: "tags", fieldName: "tags", isArray: true },
   ]);
 
-  const data = await Product.aggregate([
-    ...lookup,
-    {
-      $match: query,
-    },
-    {
-      $facet: {
-        metadata: [
-          { $count: "total" },
-          { $addFields: { page: skip / limit + 1, limit } },
-        ],
-        data: [
-          { $skip: skip },
-          { $limit: limit },
-          {
-            $sort: {
-              createdAt: -1,
-            },
+  const data = await Product.aggregate(
+    getPaginationPipline({
+      beforePipline: [
+        ...lookup,
+        { $match: query },
+        { $sort: { createdAt: -1 } },
+      ],
+      skip,
+      limit,
+      dataPipline: [
+        {
+          $project: {
+            nameAr: 1,
+            nameEn: 1,
+            descriptionAr: 1,
+            descriptionEn: 1,
+            coverList: 1,
+            rating: 1,
+            reviews: 1,
+            offer: 1,
+            brand: 1,
+            subcategory: 1,
+            labels: 1,
+            tags: 1,
+            quantity: 1,
+            disabled: 1,
+            price: 1,
+            finalPrice: 1,
           },
-          {
-            $project: {
-              nameAr: 1,
-              nameEn: 1,
-              descriptionAr: 1,
-              descriptionEn: 1,
-              coverList: 1,
-              rating: 1,
-              reviews: 1,
-              offer: 1,
-              brand: 1,
-              subcategory: 1,
-              labels: 1,
-              tags: 1,
-              quantity: 1,
-              disabled: 1,
-              price: 1,
-              finalPrice: 1,
-            },
-          },
-        ],
-      },
-    },
-    { $unwind: "$metadata" },
-    {
-      $project: {
-        data: 1,
-        metadata: 1,
-      },
-    },
-  ]);
-
-  res.status(StatusCodes.OK).json(
-    data[0] || {
-      data: [],
-      metadata: { total: 0, page: skip / limit + 1, limit },
-    }
+        },
+      ],
+    })
   );
+
+  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
 };
 
 // Public get single product
