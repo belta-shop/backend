@@ -65,7 +65,7 @@ export const getAllSubCategoriesForStaff = async (
   const data = await SubCategory.aggregate(
     getPaginationPipline({
       beforePipline: [
-        getAggregatedLookup([
+        ...getAggregatedLookup([
           { collection: "categories", fieldName: "category", isArray: false },
         ]),
         { $match: query },
@@ -86,6 +86,7 @@ export const getAllSubCategoriesForStaff = async (
               _id: 1,
               nameAr: 1,
               nameEn: 1,
+              cover: 1,
             },
           },
         },
