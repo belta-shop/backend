@@ -8,6 +8,7 @@ import {
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import CustomError from "../../errors/custom-error";
+import { getPaginationPipline } from "../../utils/models";
 
 // Public get all categories
 export const getAllCategories = async (req: Request, res: Response) => {
@@ -19,20 +20,24 @@ export const getAllCategories = async (req: Request, res: Response) => {
     ...getSearchQuery(search, ["nameAr", "nameEn"]),
   };
 
-  const categories = await Category.find(query)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .select({
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      cover: 1,
+  const data = await Category.aggregate(
+    getPaginationPipline({
+      skip,
+      limit,
+      beforePipline: [{ $match: query }],
+      dataPipline: [
+        { $sort: { createdAt: -1 } },
+        {
+          $project: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+            cover: 1,
+          },
+        },
+      ],
     })
-    .select("-createdAt -updatedAt")
-    .lean();
+  );
 
-  const total = await Category.countDocuments(query);
-
-  res.status(StatusCodes.OK).json({ items: categories, total });
+  res.status(StatusCodes.OK).json(data[0]);
 };
 
 // Staff get all categories

@@ -29,3 +29,35 @@ export function getAggregatedLookup(
 
   return pipline;
 }
+
+export function getPaginationPipline({
+  skip,
+  limit,
+  beforePipline = [],
+  dataPipline = [],
+}: {
+  skip: number;
+  limit: number;
+  beforePipline?: any[];
+  dataPipline?: any[];
+}) {
+  return [
+    ...beforePipline,
+    {
+      $facet: {
+        metadata: [
+          { $count: "total" },
+          { $addFields: { page: skip / limit + 1, limit } },
+        ],
+        data: [{ $skip: skip }, { $limit: limit }, ...dataPipline],
+      },
+    },
+    { $unwind: "$metadata" },
+    {
+      $project: {
+        data: 1,
+        metadata: 1,
+      },
+    },
+  ];
+}

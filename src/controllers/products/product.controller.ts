@@ -10,7 +10,7 @@ import SubCategory from "../../models/products/sub-category.model";
 import Brand from "../../models/products/brand.model";
 import { IOffer } from "../../types/products";
 import CustomError from "../../errors/custom-error";
-import { getAggregatedLookup } from "../../utils/models";
+import { getAggregatedLookup, getPaginationPipline } from "../../utils/models";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -56,91 +56,65 @@ export const getAllProducts = async (req: Request, res: Response) => {
     { collection: "labels", fieldName: "labels", isArray: true },
   ]);
 
-  const data = await Product.aggregate([
-    ...lookup,
-    {
-      $match: query,
-    },
-    {
-      $facet: {
-        metadata: [
-          { $count: "total" },
-          { $addFields: { page: skip / limit + 1, limit } },
-        ],
-        data: [
-          { $skip: skip },
-          { $limit: limit },
-          {
-            $sort: {
-              createdAt: -1,
+  const data = await Product.aggregate(
+    getPaginationPipline({
+      skip,
+      limit,
+      beforePipline: [...lookup, { $match: query }],
+      dataPipline: [
+        { $sort: { createdAt: -1 } },
+        {
+          $project: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+            description:
+              req.lang === "ar" ? "$descriptionAr" : "$descriptionEn",
+            coverList: 1,
+            rating: 1,
+            reviews: 1,
+            offer: 1,
+            brand: {
+              _id: 1,
+              name: req.lang === "ar" ? "$brand.nameAr" : "$brand.nameEn",
             },
-          },
-          {
-            $project: {
-              name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-              description:
-                req.lang === "ar" ? "$descriptionAr" : "$descriptionEn",
-              coverList: 1,
-              rating: 1,
-              reviews: 1,
-              offer: 1,
-              brand: {
-                _id: 1,
-                name: req.lang === "ar" ? "$brand.nameAr" : "$brand.nameEn",
-              },
-              subcategory: {
-                _id: 1,
-                name:
-                  req.lang === "ar"
-                    ? "$subcategory.nameAr"
-                    : "$subcategory.nameEn",
-              },
-              labels: {
-                $map: {
-                  input: "$labels",
-                  as: "label",
-                  in: {
-                    _id: "$$label._id",
-                    name:
-                      req.lang === "ar" ? "$$label.nameAr" : "$$label.nameEn",
-                    color: "$$label.color",
-                  },
+            subcategory: {
+              _id: 1,
+              name:
+                req.lang === "ar"
+                  ? "$subcategory.nameAr"
+                  : "$subcategory.nameEn",
+            },
+            labels: {
+              $map: {
+                input: "$labels",
+                as: "label",
+                in: {
+                  _id: "$$label._id",
+                  name: req.lang === "ar" ? "$$label.nameAr" : "$$label.nameEn",
+                  color: "$$label.color",
                 },
               },
-              tags: {
-                $map: {
-                  input: "$tags",
-                  as: "tag",
-                  in: {
-                    _id: "$$tag._id",
-                    name: req.lang === "ar" ? "$$tag.nameAr" : "$$tag.nameEn",
-                  },
+            },
+            tags: {
+              $map: {
+                input: "$tags",
+                as: "tag",
+                in: {
+                  _id: "$$tag._id",
+                  name: req.lang === "ar" ? "$$tag.nameAr" : "$$tag.nameEn",
                 },
               },
-              quantity: 1,
-              disabled: 1,
-              price: 1,
-              finalPrice: 1,
             },
+            quantity: 1,
+            disabled: 1,
+            price: 1,
+            finalPrice: 1,
           },
-        ],
-      },
-    },
-    { $unwind: "$metadata" },
-    {
-      $project: {
-        data: 1,
-        metadata: 1,
-      },
-    },
-  ]);
-
-  res.status(StatusCodes.OK).json(
-    data[0] || {
-      data: [],
-      metadata: { total: 0, page: skip / limit + 1, limit },
-    }
+        },
+      ],
+    })
   );
+
+  res.status(StatusCodes.OK).json(data[0]);
 };
 
 // Staff get all products

@@ -9,6 +9,7 @@ import {
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import CustomError from "../../errors/custom-error";
+import { getPaginationPipline } from "../../utils/models";
 
 // Staff get all labels
 export const getAllLabelsForStaff = async (req: Request, res: Response) => {
@@ -44,19 +45,24 @@ export const getAllLabels = async (req: Request, res: Response) => {
     ...getSearchQuery(color, ["color"]),
   };
 
-  const labels = await Label.find(query)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .select({
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      color: 1,
+  const data = await Label.aggregate(
+    getPaginationPipline({
+      skip,
+      limit,
+      beforePipline: [{ $match: query }],
+      dataPipline: [
+        { $sort: { createdAt: -1 } },
+        {
+          $project: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+            color: 1,
+          },
+        },
+      ],
     })
-    .select("-createdAt -updatedAt");
+  );
 
-  const total = await Label.countDocuments(query);
-
-  res.status(StatusCodes.OK).json({ items: labels, total });
+  res.status(StatusCodes.OK).json(data[0]);
 };
 
 // Staff get single label

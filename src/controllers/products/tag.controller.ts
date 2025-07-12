@@ -9,6 +9,7 @@ import {
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import CustomError from "../../errors/custom-error";
+import { getPaginationPipline } from "../../utils/models";
 
 // Staff get all tags
 export const getAllTagsForStaff = async (req: Request, res: Response) => {
@@ -44,18 +45,23 @@ export const getAllTags = async (req: Request, res: Response) => {
     ...getSearchQuery(search, ["nameAr", "nameEn"]),
   };
 
-  const tags = await Tag.find(query)
-    .select({
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+  const data = await Tag.aggregate(
+    getPaginationPipline({
+      skip,
+      limit,
+      beforePipline: [{ $match: query }],
+      dataPipline: [
+        { $sort: { createdAt: -1 } },
+        {
+          $project: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+          },
+        },
+      ],
     })
-    .select("-createdAt -updatedAt")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  );
 
-  const total = await Tag.countDocuments(query);
-
-  res.status(StatusCodes.OK).json({ items: tags, total });
+  res.status(StatusCodes.OK).json(data[0]);
 };
 
 // Staff get single tag

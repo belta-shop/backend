@@ -8,6 +8,7 @@ import {
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import CustomError from "../../errors/custom-error";
+import { getPaginationPipline } from "../../utils/models";
 
 // Staff get all brands
 export const getAllBrandsForStaff = async (req: Request, res: Response) => {
@@ -41,20 +42,24 @@ export const getAllBrands = async (req: Request, res: Response) => {
     disabled: false,
     ...getSearchQuery(search, ["nameAr", "nameEn"]),
   };
-
-  const brands = await Brand.find(query)
-    .select({
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      cover: 1,
+  const data = await Brand.aggregate(
+    getPaginationPipline({
+      skip,
+      limit,
+      beforePipline: [{ $match: query }],
+      dataPipline: [
+        { $sort: { createdAt: -1 } },
+        {
+          $project: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+            cover: 1,
+          },
+        },
+      ],
     })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .select("-createdAt -updatedAt");
+  );
 
-  const total = await Brand.countDocuments(query);
-
-  res.status(StatusCodes.OK).json({ items: brands, total });
+  res.status(StatusCodes.OK).json(data[0]);
 };
 
 // Staff get single brand

@@ -9,6 +9,7 @@ import {
   onlyAdminCanSetReadOnly,
 } from "../../utils/routes";
 import CustomError from "../../errors/custom-error";
+import { getAggregatedLookup, getPaginationPipline } from "../../utils/models";
 
 // Public get all subcategories
 export const getAllSubCategories = async (req: Request, res: Response) => {
@@ -22,24 +23,25 @@ export const getAllSubCategories = async (req: Request, res: Response) => {
 
   if (categoryId) query.category = categoryId;
 
-  const subcategories = await SubCategory.find(query)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .select({
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      cover: 1,
-      category: 1,
+  const data = await SubCategory.aggregate(
+    getPaginationPipline({
+      skip,
+      limit,
+      beforePipline: [{ $match: query }],
+      dataPipline: [
+        { $sort: { createdAt: -1 } },
+        {
+          $project: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+            cover: 1,
+            category: 1,
+          },
+        },
+      ],
     })
-    .select("-createdAt -updatedAt")
-    .populate("category", {
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      cover: 1,
-    });
+  );
 
-  const total = await SubCategory.countDocuments(query);
-
-  res.status(StatusCodes.OK).json({ items: subcategories, total });
+  res.status(StatusCodes.OK).json(data[0]);
 };
 
 // Staff get all subcategories
