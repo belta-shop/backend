@@ -11,17 +11,6 @@ export const authMiddleware = async (
   const token = req.headers["authorization"]?.split("Bearer ")[1];
   if (!token) throw new Unauthorized();
 
-  // IN DEVELOPMENT, pass user neither using valid token or userId as token
-  const unknownPayload = await verifyToken(token);
-  const isTokenInvalid = !unknownPayload;
-  if (isTokenInvalid && process.env.NODE_ENV === "development") {
-    const user = await User.findById(token);
-    if (!user) throw new Unauthorized();
-    req.currentUser = { sub: user.id, email: user.email, role: user.role };
-    next();
-    return;
-  }
-
   const payload = await verifyUserToken(token);
 
   // prevent refresh token from being used as access token
