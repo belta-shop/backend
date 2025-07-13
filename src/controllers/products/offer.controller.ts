@@ -142,6 +142,7 @@ export const updateOffer = async (req: Request, res: Response) => {
     );
     if (oldProduct) {
       oldProduct.finalPrice = oldProduct.price;
+      oldProduct.offer = undefined;
       await oldProduct.save();
     }
 
@@ -178,6 +179,7 @@ export const deleteOffer = async (req: Request, res: Response) => {
 
   if (product) {
     product.finalPrice = product.price;
+    product.offer = undefined;
     await product.save();
   }
 

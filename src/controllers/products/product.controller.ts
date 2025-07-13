@@ -15,6 +15,7 @@ import {
   getAggregatedLookup,
   getPaginationPipline,
 } from "../../utils/models";
+import Offer from "../../models/products/offer.model";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -328,6 +329,9 @@ export const deleteProduct = async (req: Request, res: Response) => {
 
   onlyAdminCanModify(req, product);
 
+  if (product.offer) {
+    await Offer.findByIdAndDelete(product.offer);
+  }
   await product.deleteOne();
   res.status(StatusCodes.OK).json({ message: "Product deleted successfully" });
 };
