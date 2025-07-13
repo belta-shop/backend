@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import Unauthorized from "../errors/unauthorized";
-import { verifyToken, verifyUserToken } from "../utils/jwt";
-import User from "../models/user.model";
+import { verifyUserToken } from "../utils/jwt";
+import CustomError from "../errors/custom-error";
+import { StatusCodes } from "http-status-codes";
 
 export const authMiddleware = async (
   req: Request,
@@ -18,7 +19,8 @@ export const authMiddleware = async (
   if (typeof payload.tokenId === "string" && !payload.purpose)
     throw new Unauthorized();
 
-  req.currentUser = payload;
+  const { user, ...rest } = payload;
+  req.currentUser = rest;
 
   next();
 };
@@ -29,7 +31,10 @@ export const staffMiddleware = (
   next: NextFunction
 ) => {
   if (!["admin", "employee"].includes(req.currentUser?.role || "")) {
-    throw new Unauthorized("Only staff members can access this resource");
+    throw new CustomError(
+      "Only staff members can access this resource",
+      StatusCodes.FORBIDDEN
+    );
   }
   next();
 };
