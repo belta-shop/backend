@@ -63,14 +63,17 @@ const ProductSchema = new Schema(
     offer: {
       type: Schema.Types.ObjectId,
       ref: "Offer",
+      default: null,
     },
     brand: {
       type: Schema.Types.ObjectId,
       ref: "Brand",
+      default: null,
     },
     subcategory: {
       type: Schema.Types.ObjectId,
       ref: "SubCategory",
+      default: null,
     },
     labels: {
       type: [

@@ -14,6 +14,9 @@ import {
   getAggregatedLookup,
   getPaginationPipline,
 } from "../../utils/models";
+import { activeCartService } from "../../services";
+import { DraftCartProductReason } from "../../types/cart";
+import { ObjectId } from "mongoose";
 
 // Get all offers (staff only)
 export const getAllOffers = async (req: Request, res: Response) => {
@@ -120,10 +123,12 @@ export const updateOffer = async (req: Request, res: Response) => {
   onlyAdminCanModify(req, offer);
   onlyAdminCanSetReadOnly(req);
 
+  const productsToRemoveFromCarts = new Set<ObjectId>();
+
   const isProductChanged =
-    req.body.productId && req.body.productId !== offer.product.toString();
+    req.body.product && req.body.product !== offer.product.toString();
   if (isProductChanged) {
-    const newProduct = await Product.findById(req.body.productId);
+    const newProduct = await Product.findById(req.body.product);
     if (!newProduct)
       throw new CustomError("New product not found", StatusCodes.NOT_FOUND);
 
@@ -133,17 +138,13 @@ export const updateOffer = async (req: Request, res: Response) => {
         StatusCodes.CONFLICT
       );
 
-    const oldProduct = await Product.findByIdAndUpdate(
-      offer.product,
-      {
-        $unset: { offer: 1 },
-      },
-      { new: true }
-    );
+    const oldProduct = await Product.findById(offer.product);
     if (oldProduct) {
       oldProduct.finalPrice = oldProduct.price;
-      oldProduct.offer = undefined;
+      oldProduct.offer = null as unknown as undefined;
       await oldProduct.save();
+
+      productsToRemoveFromCarts.add(oldProduct._id as ObjectId);
     }
 
     // Link offer to new product
@@ -159,8 +160,19 @@ export const updateOffer = async (req: Request, res: Response) => {
 
   await offer.calculateFinalPrice();
 
+  if (offer.product)
+    productsToRemoveFromCarts.add(offer.product as unknown as ObjectId);
+
   await offer.populate("product", "nameAr nameEn price finalPrice");
   res.status(StatusCodes.OK).json(offer);
+
+  // Update products in active carts
+  for (const productId of productsToRemoveFromCarts) {
+    await activeCartService.moveProductToDraft({
+      productId,
+      reason: DraftCartProductReason.PriceChange,
+    });
+  }
 };
 
 export const deleteOffer = async (req: Request, res: Response) => {

@@ -16,6 +16,11 @@ import {
   getPaginationPipline,
 } from "../../utils/models";
 import Offer from "../../models/products/offer.model";
+import ActiveCart from "../../models/carts/active-cart.model";
+import DraftCart from "../../models/carts/draft-cart.model";
+import { DraftCartProductReason } from "../../types/cart";
+import { activeCartService } from "../../services";
+import { ObjectId } from "mongoose";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -306,6 +311,9 @@ export const updateProduct = async (req: Request, res: Response) => {
 
   onlyAdminCanModify(req, product);
   onlyAdminCanSetReadOnly(req);
+
+  const oldFinalPrice = product.finalPrice;
+
   Object.assign(product, req.body);
   await product.save();
   await product.populate([
@@ -316,9 +324,22 @@ export const updateProduct = async (req: Request, res: Response) => {
     { path: "offer" },
   ]);
 
-  await (product.offer as unknown as IOffer | null)?.calculateFinalPrice();
+  const newFinalPrice =
+    (await (
+      product.offer as unknown as IOffer | null
+    )?.calculateFinalPrice()) || product.price;
+
+  product.finalPrice = newFinalPrice; // saved already in method but didn't updated here
 
   res.status(StatusCodes.OK).json(product);
+
+  // Update products in active carts
+  if (newFinalPrice !== oldFinalPrice) {
+    await activeCartService.moveProductToDraft({
+      productId: product._id as ObjectId,
+      reason: DraftCartProductReason.PriceChange,
+    });
+  }
 };
 
 // Delete product (staff only)

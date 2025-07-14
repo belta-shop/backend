@@ -105,6 +105,8 @@ OfferSchema.methods.calculateFinalPrice = async function () {
   product.finalPrice = Math.max(discountedPrice, minPrice);
 
   await product.save();
+
+  return product.finalPrice;
 };
 
 const Offer = model<IOffer>("Offer", OfferSchema);
