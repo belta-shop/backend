@@ -7,118 +7,46 @@ import {
   getPaginationPipline,
 } from "../../utils/models";
 import { StatusCodes } from "http-status-codes";
-import Product from "../../models/products/product.model";
 import CustomError from "../../errors/custom-error";
 import User from "../../models/user.model";
+import { activeCartService } from "../../services";
 
 export const getActiveCart = async (req: Request, res: Response) => {
-  const userId = req.currentUser?.sub;
+  const cart = await activeCartService.getCart({
+    userId: req.currentUser!.sub,
+    role: req.currentUser!.role,
+  });
 
-  if (req.currentUser?.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-
-  let activeCart = await ActiveCart.findOne({ user: userId });
-
-  if (!activeCart) {
-    activeCart = await ActiveCart.create({ user: userId });
-  }
-
-  res.status(StatusCodes.OK).json(activeCart);
+  res.status(StatusCodes.OK).json(cart);
 };
 
 export const addProductToActiveCart = async (req: Request, res: Response) => {
-  const userId = req.currentUser?.sub;
-
-  if (req.currentUser?.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-
   const { productId, quantity } = req.body;
 
-  const product = await Product.findById(productId);
+  const updatedCart = await activeCartService.addProduct({
+    userId: req.currentUser!.sub,
+    role: req.currentUser!.role,
+    productId,
+    quantity,
+  });
 
-  if (!product) {
-    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
-  }
-
-  let activeCart = await ActiveCart.findOne({ user: userId });
-
-  if (!activeCart) activeCart = await ActiveCart.create({ user: userId });
-
-  const productIndex = activeCart.products.findIndex(
-    (product) => product.productId.toString() === productId
-  );
-
-  const totalPrice = product.finalPrice * quantity;
-  if (productIndex === -1) {
-    activeCart.products.push({
-      productId,
-      cover: product.coverList[0],
-      nameAr: product.nameAr,
-      nameEn: product.nameEn,
-      quantity,
-      itemPrice: product.finalPrice,
-      totalPrice,
-    });
-
-    activeCart.finalPrice += totalPrice;
-  } else {
-    activeCart.products[productIndex].quantity += quantity;
-    activeCart.products[productIndex].totalPrice += totalPrice;
-    activeCart.finalPrice += totalPrice;
-  }
-
-  activeCart.save();
-
-  res.status(StatusCodes.OK).json(activeCart);
+  res.status(StatusCodes.OK).json(updatedCart);
 };
 
 export const removeProductFromActiveCart = async (
   req: Request,
   res: Response
 ) => {
-  const userId = req.currentUser?.sub;
-
-  if (req.currentUser?.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-
   const { productId, quantity } = req.body;
 
-  let activeCart = await ActiveCart.findOne({ user: userId });
+  const updatedCart = await activeCartService.removeProduct({
+    userId: req.currentUser!.sub,
+    role: req.currentUser!.role,
+    productId,
+    quantity,
+  });
 
-  if (!activeCart) activeCart = await ActiveCart.create({ user: userId });
-
-  const productIndex = activeCart.products.findIndex(
-    (product) => product.productId.toString() === productId
-  );
-
-  if (productIndex === -1) {
-    res.status(StatusCodes.OK).json(activeCart);
-  } else {
-    const product = activeCart.products[productIndex];
-
-    if (product.quantity > quantity) {
-      product.quantity -= quantity;
-      const diffPrice = product.itemPrice * quantity;
-      product.totalPrice -= diffPrice;
-      activeCart.finalPrice -= diffPrice;
-    } else {
-      activeCart.finalPrice -= product.totalPrice;
-      activeCart.products.splice(productIndex, 1);
-    }
-
-    await activeCart.save();
-
-    res.status(StatusCodes.OK).json(activeCart);
-  }
+  res.status(StatusCodes.OK).json(updatedCart);
 };
 
 export const getAllActiveCarts = async (req: Request, res: Response) => {
@@ -157,25 +85,11 @@ export const getAllActiveCarts = async (req: Request, res: Response) => {
 export const getActiveCartForStaff = async (req: Request, res: Response) => {
   const { userId } = req.params;
 
-  const user = await User.findById(userId);
+  const cart = await activeCartService.getCart({
+    userId,
+  });
 
-  if (!user) {
-    throw new CustomError("User not found", StatusCodes.NOT_FOUND);
-  }
-
-  if (user.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-
-  let activeCart = await ActiveCart.findOne({ user: userId });
-
-  if (!activeCart) {
-    activeCart = await ActiveCart.create({ user: userId });
-  }
-
-  res.status(StatusCodes.OK).json(activeCart);
+  res.status(StatusCodes.OK).json(cart);
 };
 
 export const addProductToActiveCartForStaff = async (
@@ -190,48 +104,14 @@ export const addProductToActiveCartForStaff = async (
     throw new CustomError("User not found", StatusCodes.NOT_FOUND);
   }
 
-  if (user.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
+  const updatedCart = await activeCartService.addProduct({
+    userId,
+    productId,
+    quantity,
+    role: user.role,
+  });
 
-  const product = await Product.findById(productId);
-
-  if (!product) {
-    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
-  }
-
-  let activeCart = await ActiveCart.findOne({ user: userId });
-
-  if (!activeCart) activeCart = await ActiveCart.create({ user: userId });
-
-  const productIndex = activeCart.products.findIndex(
-    (product) => product.productId.toString() === productId
-  );
-
-  const totalPrice = product.finalPrice * quantity;
-  if (productIndex === -1) {
-    activeCart.products.push({
-      productId,
-      cover: product.coverList[0],
-      nameAr: product.nameAr,
-      nameEn: product.nameEn,
-      quantity,
-      itemPrice: product.finalPrice,
-      totalPrice,
-    });
-
-    activeCart.finalPrice += totalPrice;
-  } else {
-    activeCart.products[productIndex].quantity += quantity;
-    activeCart.products[productIndex].totalPrice += totalPrice;
-    activeCart.finalPrice += totalPrice;
-  }
-
-  activeCart.save();
-
-  res.status(StatusCodes.OK).json(activeCart);
+  res.status(StatusCodes.OK).json(updatedCart);
 };
 
 export const removeProductFromActiveCartForStaff = async (
@@ -246,37 +126,12 @@ export const removeProductFromActiveCartForStaff = async (
     throw new CustomError("User not found", StatusCodes.NOT_FOUND);
   }
 
-  if (user.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
+  const updatedCart = await activeCartService.removeProduct({
+    userId,
+    productId,
+    quantity,
+    role: user.role,
+  });
 
-  let activeCart = await ActiveCart.findOne({ user: userId });
-
-  if (!activeCart) activeCart = await ActiveCart.create({ user: userId });
-
-  const productIndex = activeCart.products.findIndex(
-    (product) => product.productId.toString() === productId
-  );
-
-  if (productIndex === -1) {
-    res.status(StatusCodes.OK).json(activeCart);
-  } else {
-    const product = activeCart.products[productIndex];
-
-    if (product.quantity > quantity) {
-      product.quantity -= quantity;
-      const diffPrice = product.itemPrice * quantity;
-      product.totalPrice -= diffPrice;
-      activeCart.finalPrice -= diffPrice;
-    } else {
-      activeCart.finalPrice -= product.totalPrice;
-      activeCart.products.splice(productIndex, 1);
-    }
-
-    await activeCart.save();
-
-    res.status(StatusCodes.OK).json(activeCart);
-  }
+  res.status(StatusCodes.OK).json(updatedCart);
 };

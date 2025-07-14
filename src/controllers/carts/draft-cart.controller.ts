@@ -11,110 +11,44 @@ import Product from "../../models/products/product.model";
 import CustomError from "../../errors/custom-error";
 import User from "../../models/user.model";
 import { DraftCartProductReason } from "../../types/cart";
+import { draftCartService } from "../../services";
 
 export const getDraftCart = async (req: Request, res: Response) => {
-  const userId = req.currentUser?.sub;
+  const cart = await draftCartService.getCart({
+    userId: req.currentUser!.sub,
+    role: req.currentUser!.role,
+  });
 
-  if (req.currentUser?.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-
-  let draftCart = await DraftCart.findOne({ user: userId });
-
-  if (!draftCart) {
-    draftCart = await DraftCart.create({ user: userId });
-  }
-
-  res.status(StatusCodes.OK).json(draftCart);
+  res.status(StatusCodes.OK).json(cart);
 };
 
 export const addProductToDraftCart = async (req: Request, res: Response) => {
-  const userId = req.currentUser?.sub;
-
-  if (req.currentUser?.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-
   const { productId, quantity } = req.body;
 
-  const product = await Product.findById(productId);
+  const updatedCart = await draftCartService.addProduct({
+    userId: req.currentUser!.sub,
+    role: req.currentUser!.role,
+    productId,
+    quantity,
+  });
 
-  if (!product) {
-    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
-  }
-
-  let draftCart = await DraftCart.findOne({ user: userId });
-
-  if (!draftCart) draftCart = await DraftCart.create({ user: userId });
-
-  const productIndex = draftCart.products.findIndex(
-    (product) => product.productId.toString() === productId
-  );
-
-  const totalPrice = product.finalPrice * quantity;
-  if (productIndex === -1) {
-    draftCart.products.push({
-      productId,
-      cover: product.coverList[0],
-      nameAr: product.nameAr,
-      nameEn: product.nameEn,
-      quantity,
-      itemPrice: product.finalPrice,
-      totalPrice,
-    });
-  } else {
-    draftCart.products[productIndex].quantity += quantity;
-    draftCart.products[productIndex].totalPrice += totalPrice;
-  }
-
-  draftCart.save();
-
-  res.status(StatusCodes.OK).json(draftCart);
+  res.status(StatusCodes.OK).json(updatedCart);
 };
 
 export const removeProductFromDraftCart = async (
   req: Request,
   res: Response
 ) => {
-  const userId = req.currentUser?.sub;
-
-  if (req.currentUser?.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-
   const { productId, quantity } = req.body;
 
-  let draftCart = await DraftCart.findOne({ user: userId });
+  const updatedCart = await draftCartService.removeProduct({
+    userId: req.currentUser!.sub,
+    role: req.currentUser!.role,
+    productId,
+    quantity,
+  });
 
-  if (!draftCart) draftCart = await DraftCart.create({ user: userId });
-
-  const productIndex = draftCart.products.findIndex(
-    (product) => product.productId.toString() === productId
-  );
-
-  if (productIndex === -1) {
-    res.status(StatusCodes.OK).json(draftCart);
-  } else {
-    const product = draftCart.products[productIndex];
-
-    if (product.quantity > quantity) {
-      product.quantity -= quantity;
-      const diffPrice = product.itemPrice * quantity;
-      product.totalPrice -= diffPrice;
-    } else {
-      draftCart.products.splice(productIndex, 1);
-    }
-
-    await draftCart.save();
-
-    res.status(StatusCodes.OK).json(draftCart);
-  }
+  res.status(StatusCodes.OK).json(updatedCart);
 };
 
 export const getAllDraftCarts = async (req: Request, res: Response) => {
@@ -152,25 +86,9 @@ export const getAllDraftCarts = async (req: Request, res: Response) => {
 export const getDraftCartForStaff = async (req: Request, res: Response) => {
   const { userId } = req.params;
 
-  const user = await User.findById(userId);
+  const cart = await draftCartService.getCart({ userId });
 
-  if (!user) {
-    throw new CustomError("User not found", StatusCodes.NOT_FOUND);
-  }
-
-  if (user.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-
-  let draftCart = await DraftCart.findOne({ user: userId });
-
-  if (!draftCart) {
-    draftCart = await DraftCart.create({ user: userId });
-  }
-
-  res.status(StatusCodes.OK).json(draftCart);
+  res.status(StatusCodes.OK).json(cart);
 };
 
 export const addProductToDraftCartForStaff = async (
@@ -179,51 +97,13 @@ export const addProductToDraftCartForStaff = async (
 ) => {
   const { productId, quantity, userId } = req.body;
 
-  const user = await User.findById(userId);
+  const updatedCart = await draftCartService.addProduct({
+    userId,
+    productId,
+    quantity,
+  });
 
-  if (!user) {
-    throw new CustomError("User not found", StatusCodes.NOT_FOUND);
-  }
-
-  if (user.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-
-  const product = await Product.findById(productId);
-
-  if (!product) {
-    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
-  }
-
-  let draftCart = await DraftCart.findOne({ user: userId });
-
-  if (!draftCart) draftCart = await DraftCart.create({ user: userId });
-
-  const productIndex = draftCart.products.findIndex(
-    (product) => product.productId.toString() === productId
-  );
-
-  const totalPrice = product.finalPrice * quantity;
-  if (productIndex === -1) {
-    draftCart.products.push({
-      productId,
-      cover: product.coverList[0],
-      nameAr: product.nameAr,
-      nameEn: product.nameEn,
-      quantity,
-      itemPrice: product.finalPrice,
-      totalPrice,
-    });
-  } else {
-    draftCart.products[productIndex].quantity += quantity;
-    draftCart.products[productIndex].totalPrice += totalPrice;
-  }
-
-  draftCart.save();
-
-  res.status(StatusCodes.OK).json(draftCart);
+  res.status(StatusCodes.OK).json(updatedCart);
 };
 
 export const removeProductFromDraftCartForStaff = async (
@@ -232,41 +112,11 @@ export const removeProductFromDraftCartForStaff = async (
 ) => {
   const { productId, quantity, userId } = req.body;
 
-  const user = await User.findById(userId);
+  const updatedCart = await draftCartService.removeProduct({
+    userId,
+    productId,
+    quantity,
+  });
 
-  if (!user) {
-    throw new CustomError("User not found", StatusCodes.NOT_FOUND);
-  }
-
-  if (user.role !== "client")
-    throw new CustomError(
-      "Carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-
-  let draftCart = await DraftCart.findOne({ user: userId });
-
-  if (!draftCart) draftCart = await DraftCart.create({ user: userId });
-
-  const productIndex = draftCart.products.findIndex(
-    (product) => product.productId.toString() === productId
-  );
-
-  if (productIndex === -1) {
-    res.status(StatusCodes.OK).json(draftCart);
-  } else {
-    const product = draftCart.products[productIndex];
-
-    if (product.quantity > quantity) {
-      product.quantity -= quantity;
-      const diffPrice = product.itemPrice * quantity;
-      product.totalPrice -= diffPrice;
-    } else {
-      draftCart.products.splice(productIndex, 1);
-    }
-
-    await draftCart.save();
-
-    res.status(StatusCodes.OK).json(draftCart);
-  }
+  res.status(StatusCodes.OK).json(updatedCart);
 };

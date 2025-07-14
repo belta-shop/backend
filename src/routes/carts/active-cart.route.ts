@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { authMiddleware, clientMiddleware } from "../../middleware/auth";
 import { staffMiddleware } from "../../middleware/auth";
-import {
+import { activeCartController } from "../../controllers";
+
+const {
   addProductToActiveCart,
   addProductToActiveCartForStaff,
   getActiveCart,
@@ -9,7 +11,7 @@ import {
   getAllActiveCarts,
   removeProductFromActiveCart,
   removeProductFromActiveCartForStaff,
-} from "../../controllers/carts/active-cart.controller";
+} = activeCartController;
 
 const router = Router();
 const staffRouter = Router();

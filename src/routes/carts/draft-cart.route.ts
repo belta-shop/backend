@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { authMiddleware, clientMiddleware } from "../../middleware/auth";
 import { staffMiddleware } from "../../middleware/auth";
-import {
+import { draftCartController } from "../../controllers";
+
+const {
   addProductToDraftCart,
   addProductToDraftCartForStaff,
   getDraftCart,
@@ -9,7 +11,7 @@ import {
   getAllDraftCarts,
   removeProductFromDraftCart,
   removeProductFromDraftCartForStaff,
-} from "../../controllers/carts/draft-cart.controller";
+} = draftCartController;
 
 const router = Router();
 const staffRouter = Router();
