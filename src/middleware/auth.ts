@@ -38,3 +38,17 @@ export const staffMiddleware = (
   }
   next();
 };
+
+export const clientMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (req.currentUser?.role !== "client")
+    throw new CustomError(
+      "this action is not allowed for this user",
+      StatusCodes.FORBIDDEN
+    );
+
+  next();
+};

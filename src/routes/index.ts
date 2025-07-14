@@ -8,6 +8,8 @@ import offerRouter from "./products/offer.route";
 import labelRouter from "./products/label.route";
 import tagRouter from "./products/tag.route";
 import brandRouter from "./products/brand.route";
+import activeCartRouter from "./carts/active-cart.route";
+import draftCartRouter from "./carts/draft-cart.route";
 const router = Router();
 
 router.use("/auth", authRouter);
@@ -19,5 +21,7 @@ router.use("/offers", offerRouter);
 router.use("/labels", labelRouter);
 router.use("/tags", tagRouter);
 router.use("/brands", brandRouter);
+router.use("/active-carts", activeCartRouter);
+router.use("/draft-carts", draftCartRouter);
 
 export default router;

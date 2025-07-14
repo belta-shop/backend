@@ -62,7 +62,8 @@ export const login = async (
         role,
       });
 
-      if (!confirmed) {
+      const existOtp = await OTP.findOne({ email });
+      if (!confirmed && !existOtp) {
         // Create OTP
         const otpValue = genOTP();
         await OTP.create({
