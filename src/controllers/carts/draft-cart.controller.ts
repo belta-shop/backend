@@ -7,11 +7,23 @@ import {
   getPaginationPipline,
 } from "../../utils/models";
 import { StatusCodes } from "http-status-codes";
-import Product from "../../models/products/product.model";
-import CustomError from "../../errors/custom-error";
-import User from "../../models/user.model";
-import { DraftCartProductReason } from "../../types/cart";
 import { draftCartService } from "../../services";
+import { Language } from "../../types/language";
+
+const translateCartProducts = (cart: any, lang: Language): any => {
+  const cartObject = cart.toObject();
+
+  return {
+    ...cartObject,
+    products: cartObject.products.map(
+      ({ _id, nameAr, nameEn, ...item }: any) => ({
+        _id,
+        name: lang === "ar" ? nameAr : nameEn,
+        ...item,
+      })
+    ),
+  };
+};
 
 export const getDraftCart = async (req: Request, res: Response) => {
   const cart = await draftCartService.getCart({
@@ -19,7 +31,7 @@ export const getDraftCart = async (req: Request, res: Response) => {
     role: req.currentUser!.role,
   });
 
-  res.status(StatusCodes.OK).json(cart);
+  res.status(StatusCodes.OK).json(translateCartProducts(cart, req.lang));
 };
 
 export const addProductToDraftCart = async (req: Request, res: Response) => {
@@ -32,7 +44,7 @@ export const addProductToDraftCart = async (req: Request, res: Response) => {
     quantity,
   });
 
-  res.status(StatusCodes.OK).json(updatedCart);
+  res.status(StatusCodes.OK).json(translateCartProducts(updatedCart, req.lang));
 };
 
 export const removeProductFromDraftCart = async (
@@ -48,7 +60,7 @@ export const removeProductFromDraftCart = async (
     quantity,
   });
 
-  res.status(StatusCodes.OK).json(updatedCart);
+  res.status(StatusCodes.OK).json(translateCartProducts(updatedCart, req.lang));
 };
 
 export const getAllDraftCarts = async (req: Request, res: Response) => {

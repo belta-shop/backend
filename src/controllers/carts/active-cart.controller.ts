@@ -10,6 +10,22 @@ import { StatusCodes } from "http-status-codes";
 import CustomError from "../../errors/custom-error";
 import User from "../../models/user.model";
 import { activeCartService } from "../../services";
+import { Language } from "../../types/language";
+
+const translateCartProducts = (cart: any, lang: Language): any => {
+  const cartObject = cart.toObject();
+
+  return {
+    ...cartObject,
+    products: cartObject.products.map(
+      ({ _id, nameAr, nameEn, ...item }: any) => ({
+        _id,
+        name: lang === "ar" ? nameAr : nameEn,
+        ...item,
+      })
+    ),
+  };
+};
 
 export const getActiveCart = async (req: Request, res: Response) => {
   const cart = await activeCartService.getCart({
@@ -17,20 +33,20 @@ export const getActiveCart = async (req: Request, res: Response) => {
     role: req.currentUser!.role,
   });
 
-  res.status(StatusCodes.OK).json(cart);
+  res.status(StatusCodes.OK).json(translateCartProducts(cart, req.lang));
 };
 
 export const addProductToActiveCart = async (req: Request, res: Response) => {
   const { productId, quantity } = req.body;
 
-  const updatedCart = await activeCartService.addProduct({
+  let updatedCart = await activeCartService.addProduct({
     userId: req.currentUser!.sub,
     role: req.currentUser!.role,
     productId,
     quantity,
   });
 
-  res.status(StatusCodes.OK).json(updatedCart);
+  res.status(StatusCodes.OK).json(translateCartProducts(updatedCart, req.lang));
 };
 
 export const removeProductFromActiveCart = async (
@@ -46,7 +62,7 @@ export const removeProductFromActiveCart = async (
     quantity,
   });
 
-  res.status(StatusCodes.OK).json(updatedCart);
+  res.status(StatusCodes.OK).json(translateCartProducts(updatedCart, req.lang));
 };
 
 export const getAllActiveCarts = async (req: Request, res: Response) => {
