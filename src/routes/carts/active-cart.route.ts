@@ -20,19 +20,14 @@ router.use(authMiddleware);
 staffRouter.use(staffMiddleware);
 router.use("/staff", staffRouter);
 
-staffRouter
-  .route("/")
-  .get(getAllActiveCarts)
-  .post(addProductToActiveCartForStaff)
-  .delete(removeProductFromActiveCartForStaff);
-
-staffRouter.route("/:userId").get(getActiveCartForStaff);
+staffRouter.get("/", getAllActiveCarts);
+staffRouter.get("/:userId", getActiveCartForStaff);
+staffRouter.post("/add", addProductToActiveCartForStaff);
+staffRouter.post("/remove", removeProductFromActiveCartForStaff);
 
 router.use(clientMiddleware);
-router
-  .route("/")
-  .get(getActiveCart)
-  .post(addProductToActiveCart)
-  .delete(removeProductFromActiveCart);
+router.get("/", getActiveCart);
+router.post("add", addProductToActiveCart);
+router.post("remove", removeProductFromActiveCart);
 
 export default router;
