@@ -9,6 +9,7 @@ import {
 import { StatusCodes } from "http-status-codes";
 import { draftCartService } from "../../services";
 import { Language } from "../../types/language";
+import CustomError from "../../errors/custom-error";
 
 const translateCartProducts = (cart: any, lang: Language): any => {
   const cartObject = cart.toObject();
@@ -42,6 +43,27 @@ export const addProductToDraftCart = async (req: Request, res: Response) => {
     role: req.currentUser!.role,
     productId,
     quantity,
+  });
+
+  res.status(StatusCodes.OK).json(translateCartProducts(updatedCart, req.lang));
+};
+
+export const addMultiProductsToDraftCart = async (
+  req: Request,
+  res: Response
+) => {
+  const { products } = req.body;
+
+  if (!Array.isArray(products))
+    throw new CustomError(
+      "products must be an array of {productId: string, quantity: number}",
+      StatusCodes.BAD_REQUEST
+    );
+
+  let updatedCart = await draftCartService.addMultiProduct({
+    userId: req.currentUser!.sub,
+    role: req.currentUser!.role,
+    items: products,
   });
 
   res.status(StatusCodes.OK).json(translateCartProducts(updatedCart, req.lang));

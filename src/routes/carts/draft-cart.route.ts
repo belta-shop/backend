@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authMiddleware, clientMiddleware } from "../../middleware/auth";
 import { staffMiddleware } from "../../middleware/auth";
 import { draftCartController } from "../../controllers";
+import { addMultiProductsToDraftCart } from "../../controllers/carts/draft-cart.controller";
 
 const {
   addProductToDraftCart,
@@ -28,6 +29,7 @@ staffRouter.post("/remove", removeProductFromDraftCartForStaff);
 router.use(clientMiddleware);
 router.get("/", getDraftCart);
 router.post("/add", addProductToDraftCart);
+router.post("/add-multiple", addMultiProductsToDraftCart);
 router.post("/remove", removeProductFromDraftCart);
 
 export default router;

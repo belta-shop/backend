@@ -90,6 +90,62 @@ export const addProduct = async ({
   return activeCart;
 };
 
+export const addMultiProduct = async ({
+  userId,
+  role,
+  items,
+}: {
+  userId: string;
+  role?: string;
+  items: {
+    productId: string;
+    quantity: number;
+  }[];
+}) => {
+  await checkIfClient(userId, role);
+
+  let activeCart = await ActiveCart.findOne({ user: userId });
+
+  if (!activeCart) activeCart = await ActiveCart.create({ user: userId });
+
+  await Promise.all(
+    items.map(async ({ productId, quantity }) => {
+      const product = await Product.findById(productId);
+      if (!product) return;
+
+      const productIndex = activeCart.products.findIndex(
+        (product) => product.productId.toString() === productId
+      );
+
+      const totalPrice = product.finalPrice * quantity;
+
+      if (productIndex === -1) {
+        // Not in Cart => add new one
+        activeCart.products.push({
+          productId,
+          cover: product.coverList[0],
+          nameAr: product.nameAr,
+          nameEn: product.nameEn,
+          quantity,
+          itemPrice: product.finalPrice,
+          totalPrice,
+        });
+
+        activeCart.finalPrice += totalPrice;
+      } else {
+        // In Cart => update quantity
+        activeCart.products[productIndex].quantity += quantity;
+        activeCart.products[productIndex].totalPrice += totalPrice;
+        activeCart.finalPrice += totalPrice;
+      }
+    }, [])
+  );
+
+  activeCart.save();
+
+  return activeCart;
+};
+
 export const removeProduct = async ({
   userId,
   productId,
