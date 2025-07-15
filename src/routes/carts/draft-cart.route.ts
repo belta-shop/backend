@@ -22,12 +22,12 @@ router.use("/staff", staffRouter);
 
 staffRouter.get("/", getAllDraftCarts);
 staffRouter.route("/:userId").get(getDraftCartForStaff);
-staffRouter.post("add", addProductToDraftCartForStaff);
-staffRouter.post("remove", removeProductFromDraftCartForStaff);
+staffRouter.post("/add", addProductToDraftCartForStaff);
+staffRouter.post("/remove", removeProductFromDraftCartForStaff);
 
 router.use(clientMiddleware);
 router.get("/", getDraftCart);
-router.post("add", addProductToDraftCart);
-router.post("remove", removeProductFromDraftCart);
+router.post("/add", addProductToDraftCart);
+router.post("/remove", removeProductFromDraftCart);
 
 export default router;

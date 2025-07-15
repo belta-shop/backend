@@ -27,7 +27,7 @@ staffRouter.post("/remove", removeProductFromActiveCartForStaff);
 
 router.use(clientMiddleware);
 router.get("/", getActiveCart);
-router.post("add", addProductToActiveCart);
-router.post("remove", removeProductFromActiveCart);
+router.post("/add", addProductToActiveCart);
+router.post("/remove", removeProductFromActiveCart);
 
 export default router;
