@@ -202,6 +202,7 @@ export const getAllProductsForStaff = async (req: Request, res: Response) => {
             disabled: 1,
             price: 1,
             finalPrice: 1,
+            employeeReadOnly: 1,
           },
         },
       ],
