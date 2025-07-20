@@ -16,8 +16,6 @@ import {
   getPaginationPipline,
 } from "../../utils/models";
 import Offer from "../../models/products/offer.model";
-import ActiveCart from "../../models/carts/active-cart.model";
-import DraftCart from "../../models/carts/draft-cart.model";
 import { DraftCartProductReason } from "../../types/cart";
 import { activeCartService } from "../../services";
 import { ObjectId } from "mongoose";
@@ -201,6 +199,7 @@ export const getAllProductsForStaff = async (req: Request, res: Response) => {
             quantity: 1,
             disabled: 1,
             price: 1,
+            minPrice: 1,
             finalPrice: 1,
             employeeReadOnly: 1,
           },
