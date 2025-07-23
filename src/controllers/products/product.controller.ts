@@ -150,20 +150,25 @@ export const getAllProductsForStaff = async (req: Request, res: Response) => {
       { nameEn: { $regex: search, $options: "i" } },
     ];
 
-  if (disabled !== undefined) query.disabled = disabled === "true";
+  const andQuery: any = [];
+
+  if (disabled !== undefined)
+    andQuery.push({ $eq: ["$disabled", disabled === "true"] });
   if (tag) {
-    query.tags = {
-      $elemMatch: {
-        _id: tag,
-      },
-    };
+    andQuery.push({
+      $in: [{ $toObjectId: tag }, "$tags"],
+    });
   }
-  if (brand) query.brand = brand;
-  if (subcategory) query.subcategory = subcategory;
-  if (label) query.labels = label;
+
+  if (brand) andQuery.push({ $eq: ["$brand", { $toObjectId: brand }] });
+  if (subcategory)
+    andQuery.push({ $eq: ["$subcategory", { $toObjectId: subcategory }] });
+  if (label) andQuery.push({ $eq: ["$labels", label] });
   if (employeeReadOnly !== undefined)
-    query.employeeReadOnly = employeeReadOnly === "true";
-  if (offer) query.offer = offer;
+    andQuery.push({ $eq: ["$employeeReadOnly", employeeReadOnly === "true"] });
+  if (offer) andQuery.push({ $eq: ["$offer", { $toObjectId: offer }] });
+
+  if (andQuery.length > 0) query.$expr = { $and: andQuery };
 
   const lookup = getAggregatedLookup([
     { collection: "brands", fieldName: "brand", isArray: false },
@@ -175,9 +180,11 @@ export const getAllProductsForStaff = async (req: Request, res: Response) => {
   const data = await Product.aggregate(
     getPaginationPipline({
       beforePipline: [
-        ...lookup,
-        { $match: query },
+        {
+          $match: query,
+        },
         { $sort: { createdAt: -1 } },
+        ...lookup,
       ],
       skip,
       limit,
