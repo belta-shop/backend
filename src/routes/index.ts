@@ -10,10 +10,14 @@ import tagRouter from "./products/tag.route";
 import brandRouter from "./products/brand.route";
 import activeCartRouter from "./carts/active-cart.route";
 import draftCartRouter from "./carts/draft-cart.route";
+import checkoutRouter from "./carts/checkout.route";
+
 const router = Router();
 
 router.use("/auth", authRouter);
+
 router.use("/upload", uploadRouter);
+
 router.use("/categories", categoryRouter);
 router.use("/subcategories", subCategoryRouter);
 router.use("/products", productRouter);
@@ -21,7 +25,9 @@ router.use("/offers", offerRouter);
 router.use("/labels", labelRouter);
 router.use("/tags", tagRouter);
 router.use("/brands", brandRouter);
+
 router.use("/active-carts", activeCartRouter);
 router.use("/draft-carts", draftCartRouter);
+router.use("/checkout", checkoutRouter);
 
 export default router;

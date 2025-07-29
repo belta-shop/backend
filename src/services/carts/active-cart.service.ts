@@ -241,3 +241,17 @@ export const moveProductToDraft = async ({
     await draftCart.save();
   }
 };
+
+export const clearCart = async ({
+  userId,
+  role,
+}: {
+  userId: string;
+  role?: string;
+}) => {
+  const cart = await getCart({ userId, role });
+
+  cart.products = [] as any;
+  cart.finalPrice = 0;
+  await cart.save();
+};
