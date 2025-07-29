@@ -20,11 +20,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       "successUrl and cancelUrl are required",
       StatusCodes.BAD_REQUEST
     );
-  if (!successUrl.includes("{sessionId}"))
-    throw new CustomError(
-      "successUrl must contain {sessionId}",
-      StatusCodes.BAD_REQUEST
-    );
 
   const lineItems = cart.products.map((item) => {
     const product = item.toObject();
@@ -44,8 +39,11 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   const session = await stripe.checkout.sessions.create({
     line_items: lineItems,
     mode: "payment",
-    success_url: successUrl.replace("{sessionId}", req.currentUser!.sub),
+    success_url: `${process.env.SERVER_URL}/checkout/success/{CHECKOUT_SESSION_ID}?redirectUrl=${successUrl}`,
     cancel_url: cancelUrl,
+    metadata: {
+      userId: req.currentUser!.sub,
+    },
   });
 
   if (!session.url)
@@ -57,19 +55,32 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ url: session.url });
 };
 
-export const clearCartSession = async (req: Request, res: Response) => {
-  const sessionId = req.body?.sessionId;
+export const successCheckoutSession = async (req: Request, res: Response) => {
+  const sessionId = req.params.sessionId;
+  const redirectUrl = req.query.redirectUrl as string;
 
   if (!sessionId)
     throw new CustomError("sessionId is required", StatusCodes.BAD_REQUEST);
 
-  if (sessionId !== req.currentUser!.sub)
-    throw new CustomError("Unauthorized", StatusCodes.UNAUTHORIZED);
+  if (!redirectUrl)
+    throw new CustomError("redirectUrl is required", StatusCodes.BAD_REQUEST);
 
-  await activeCartService.clearCart({
-    userId: sessionId,
-    role: req.currentUser!.role,
-  });
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-  res.status(StatusCodes.NO_CONTENT).json();
+    if (!session.metadata?.userId)
+      throw new CustomError("Unauthorized", StatusCodes.UNAUTHORIZED);
+
+    await activeCartService.clearCart({
+      userId: session.metadata.userId,
+    });
+
+    res.status(StatusCodes.TEMPORARY_REDIRECT).redirect(redirectUrl);
+  } catch (error) {
+    console.log(error);
+    throw new CustomError(
+      "Failed to retrieve checkout session",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
 };
