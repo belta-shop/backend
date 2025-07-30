@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { activeCartService } from "../../services";
+import { activeCartService, orderService } from "../../services";
 import CustomError from "../../errors/custom-error";
 import { StatusCodes } from "http-status-codes";
 import { stripe } from "../../utils/stripe";
@@ -71,8 +71,9 @@ export const successCheckoutSession = async (req: Request, res: Response) => {
     if (!session.metadata?.userId)
       throw new CustomError("Unauthorized", StatusCodes.UNAUTHORIZED);
 
-    await activeCartService.clearCart({
+    await orderService.placeOrder({
       userId: session.metadata.userId,
+      sessionId: sessionId,
     });
 
     res.status(StatusCodes.TEMPORARY_REDIRECT).redirect(redirectUrl);

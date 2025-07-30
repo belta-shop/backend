@@ -46,7 +46,7 @@ export const clientMiddleware = (
 ) => {
   if (req.currentUser?.role !== "client")
     throw new CustomError(
-      "this action is not allowed for this user",
+      "This action is not allowed for this user",
       StatusCodes.FORBIDDEN
     );
 

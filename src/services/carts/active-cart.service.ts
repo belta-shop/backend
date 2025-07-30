@@ -2,25 +2,10 @@ import { StatusCodes } from "http-status-codes";
 import CustomError from "../../errors/custom-error";
 import Product from "../../models/products/product.model";
 import ActiveCart from "../../models/carts/active-cart.model";
-import User from "../../models/user.model";
 import { ObjectId } from "mongoose";
 import DraftCart from "../../models/carts/draft-cart.model";
 import { DraftCartProductReason } from "../../types/cart";
-
-const checkIfClient = async (userId: string, role?: string) => {
-  let currentRole = role;
-
-  if (!currentRole) {
-    const user = await User.findById(userId);
-    currentRole = user?.role;
-  }
-
-  if (currentRole !== "client")
-    throw new CustomError(
-      "Active carts are not allowed for this user",
-      StatusCodes.FORBIDDEN
-    );
-};
+import { checkIfClient } from "../../utils/users";
 
 export const getCart = async ({
   userId,

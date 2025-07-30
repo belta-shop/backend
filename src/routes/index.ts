@@ -11,7 +11,7 @@ import brandRouter from "./products/brand.route";
 import activeCartRouter from "./carts/active-cart.route";
 import draftCartRouter from "./carts/draft-cart.route";
 import checkoutRouter from "./carts/checkout.route";
-
+import orderRouter from "./carts/order.route";
 const router = Router();
 
 router.use("/auth", authRouter);
@@ -29,5 +29,6 @@ router.use("/brands", brandRouter);
 router.use("/active-carts", activeCartRouter);
 router.use("/draft-carts", draftCartRouter);
 router.use("/checkout", checkoutRouter);
+router.use("/orders", orderRouter);
 
 export default router;
