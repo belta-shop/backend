@@ -92,7 +92,7 @@ export const getAllActiveCarts = async (req: Request, res: Response) => {
   const data = await ActiveCart.aggregate(
     getPaginationPipline({
       beforePipline: [
-        { $match: { totalPrice: { $gt: 0 } } },
+        { $match: { finalPrice: { $gt: 0 } } },
         ...getAggregatedLookup([
           { collection: "users", fieldName: "user", isArray: false },
         ]),
@@ -109,7 +109,7 @@ export const getAllActiveCarts = async (req: Request, res: Response) => {
               email: 1,
             },
             finalPrice: 1,
-            products: 1,
+            productsCount: { $size: "$products" },
           },
         },
       ],
