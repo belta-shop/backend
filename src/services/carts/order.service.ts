@@ -61,8 +61,12 @@ export const changeOrderStatus = async ({
   return order;
 };
 
-export const getOrderById = async (orderId: string, projection?: any) => {
-  const order = await Order.findById(orderId, projection);
+export const getOrderById = async (
+  orderId: string,
+  projection?: any,
+  populate?: any
+) => {
+  const order = await Order.findById(orderId, projection).populate(populate);
 
   if (!order) throw new CustomError("Order not found", StatusCodes.NOT_FOUND);
 
@@ -76,7 +80,7 @@ export const getAllOrders = async (
     status?: OrderStatus;
     userId?: string;
   },
-  projection?: any
+  dataPipline?: any[]
 ) => {
   const { skip, limit, status, userId } = filters;
 
@@ -95,7 +99,7 @@ export const getAllOrders = async (
       beforePipline: [{ $match: query }, { $sort: { createdAt: -1 } }],
       skip,
       limit,
-      dataPipline: projection ? [{ $project: projection }] : [],
+      dataPipline,
     })
   );
 

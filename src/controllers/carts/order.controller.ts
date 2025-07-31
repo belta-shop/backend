@@ -5,6 +5,7 @@ import CustomError from "../../errors/custom-error";
 import { OrderStatus } from "../../types/cart";
 import { orderService, activeCartService } from "../../services";
 import { Language } from "../../types/language";
+import { getAggregatedLookup } from "../../utils/models";
 
 export const getAllOrders = async (req: Request, res: Response) => {
   const { status } = req.query;
@@ -25,11 +26,15 @@ export const getAllOrders = async (req: Request, res: Response) => {
       userId: req.currentUser!.sub,
       ...getPagination(req.query),
     },
-    {
-      finalPrice: 1,
-      status: 1,
-      createdAt: 1,
-    }
+    [
+      {
+        $project: {
+          finalPrice: 1,
+          status: 1,
+          createdAt: 1,
+        },
+      },
+    ]
   );
 
   res.status(StatusCodes.OK).json(data);
@@ -48,18 +53,28 @@ export const getAllOrdersForStaff = async (req: Request, res: Response) => {
   )
     throw new CustomError("Invalid status", StatusCodes.BAD_REQUEST);
 
+  const lookup = getAggregatedLookup([
+    { collection: "users", fieldName: "user", isArray: false },
+  ]);
+
   const data = await orderService.getAllOrders(
     {
       status: status as OrderStatus,
       userId: userId as string | undefined,
       ...getPagination(req.query),
     },
-    {
-      user: 1,
-      finalPrice: 1,
-      status: 1,
-      createdAt: 1,
-    }
+    [
+      ...lookup,
+      {
+        $project: {
+          user: 1,
+          productsCount: { $size: "$products" },
+          finalPrice: 1,
+          status: 1,
+          createdAt: 1,
+        },
+      },
+    ]
   );
 
   res.status(StatusCodes.OK).json(data);
@@ -99,13 +114,17 @@ export const getOrder = async (req: Request, res: Response) => {
 export const getOrderForStaff = async (req: Request, res: Response) => {
   const { orderId } = req.params;
 
-  const order = await orderService.getOrderById(orderId, {
-    finalPrice: 1,
-    user: 1,
-    status: 1,
-    createdAt: 1,
-    products: 1,
-  });
+  const order = await orderService.getOrderById(
+    orderId,
+    {
+      finalPrice: 1,
+      user: 1,
+      status: 1,
+      createdAt: 1,
+      products: 1,
+    },
+    "user"
+  );
 
   res.status(StatusCodes.OK).json(order);
 };

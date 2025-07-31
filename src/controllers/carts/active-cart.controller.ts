@@ -124,6 +124,7 @@ export const getActiveCartForStaff = async (req: Request, res: Response) => {
 
   const cart = await activeCartService.getCart({
     userId,
+    populate: ["user"],
   });
 
   res.status(StatusCodes.OK).json(cart);

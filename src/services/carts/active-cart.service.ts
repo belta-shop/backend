@@ -10,13 +10,20 @@ import { checkIfClient } from "../../utils/users";
 export const getCart = async ({
   userId,
   role,
+  projection,
+  populate,
 }: {
   userId: string;
   role?: string;
+  projection?: any;
+  populate?: any;
 }) => {
   await checkIfClient(userId, role);
 
-  let activeCart = await ActiveCart.findOne({ user: userId });
+  let activeCart = await ActiveCart.findOne(
+    { user: userId },
+    projection
+  ).populate(populate);
 
   if (!activeCart) activeCart = await ActiveCart.create({ user: userId });
 
