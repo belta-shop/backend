@@ -98,6 +98,7 @@ export const getOrder = async (req: Request, res: Response) => {
           itemPrice: "$$product.itemPrice",
           quantity: "$$product.quantity",
           totalPrice: "$$product.totalPrice",
+          cover: "$$product.cover",
         },
       },
     },
