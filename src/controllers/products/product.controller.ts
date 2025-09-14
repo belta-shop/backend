@@ -18,16 +18,13 @@ import {
 import Offer from "../../models/products/offer.model";
 import { DraftCartProductReason } from "../../types/cart";
 import { activeCartService } from "../../services";
-import { ObjectId } from "mongoose";
+import { Schema, ObjectId } from "mongoose";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
-  const { search, brand, subcategory, label, tag } = req.query;
+  const { search, category, brand, subcategory, label, tag } = req.query;
   const { skip, limit } = getPagination(req.query);
-
-  let query: any = {
-    disabled: false,
-  };
+  let query: any = {};
 
   // handle Search for name and tags using same search query
   if (typeof search === "string" && search) {
@@ -51,10 +48,27 @@ export const getAllProducts = async (req: Request, res: Response) => {
     ];
   }
 
-  if (brand) query.brand = brand;
-  if (subcategory) query.subcategory = subcategory;
-  if (label) query.labels = label;
-  if (tag) query.tags = tag;
+  const andQuery: any = [{ disabled: false }];
+
+  if (brand) andQuery.push({ $eq: ["$brand._id", { $toObjectId: brand }] });
+  if (category)
+    andQuery.push({
+      $eq: ["$subcategory.category", { $toObjectId: category }],
+    });
+  if (subcategory)
+    andQuery.push({ $eq: ["$subcategory._id", { $toObjectId: subcategory }] });
+  if (tag) {
+    andQuery.push({
+      $in: [{ $toObjectId: tag }, "$tags._id"],
+    });
+  }
+  if (label) {
+    andQuery.push({
+      $in: [{ $toObjectId: label }, "$labels._id"],
+    });
+  }
+
+  query.$expr = { $and: andQuery };
 
   const lookup = getAggregatedLookup([
     { collection: "brands", fieldName: "brand", isArray: false },
@@ -68,7 +82,9 @@ export const getAllProducts = async (req: Request, res: Response) => {
     getPaginationPipline({
       beforePipline: [
         ...lookup,
-        { $match: query },
+        {
+          $match: query,
+        },
         { $sort: { createdAt: -1 } },
       ],
       skip,
