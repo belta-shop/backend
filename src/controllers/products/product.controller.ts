@@ -18,11 +18,20 @@ import {
 import Offer from "../../models/products/offer.model";
 import { DraftCartProductReason } from "../../types/cart";
 import { activeCartService } from "../../services";
-import { Schema, ObjectId } from "mongoose";
+import { ObjectId } from "mongoose";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
-  const { search, category, brand, subcategory, label, tag } = req.query;
+  const {
+    search,
+    category,
+    brand,
+    subcategory,
+    label,
+    tag,
+    minPrice,
+    maxPrice,
+  } = req.query;
   const { skip, limit } = getPagination(req.query);
   let query: any = {};
 
@@ -67,6 +76,10 @@ export const getAllProducts = async (req: Request, res: Response) => {
       $in: [{ $toObjectId: label }, "$labels._id"],
     });
   }
+  if (minPrice !== undefined && minPrice)
+    andQuery.push({ $gte: ["$finalPrice", Number(minPrice)] });
+  if (maxPrice !== undefined && maxPrice)
+    andQuery.push({ $lte: ["$finalPrice", Number(maxPrice)] });
 
   query.$expr = { $and: andQuery };
 
@@ -267,6 +280,14 @@ export const getProduct = async (req: Request, res: Response) => {
         select: {
           name: req.lang === "ar" ? "$nameAr" : "$nameEn",
           cover: 1,
+          category: 1,
+        },
+        populate: {
+          path: "category",
+          select: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+            cover: 1,
+          },
         },
       },
       {
