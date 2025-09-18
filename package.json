@@ -11,7 +11,7 @@
     "build": "rimraf dist && tsc",
     "prestart": "npm run build",
     "start": "node dist/index.js",
-    "dev": "npx nodemon src/index.ts"
+    "dev": "NODE_ENV=development npx nodemon src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -44,6 +44,7 @@
     "multer": "^2.0.1",
     "node": "22.11.0",
     "nodemailer": "^7.0.3",
+    "redis": "^5.8.2",
     "rimraf": "^6.0.1",
     "stripe": "^18.3.0",
     "ts-node": "^10.9.2",

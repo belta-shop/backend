@@ -19,6 +19,8 @@ import Offer from "../../models/products/offer.model";
 import { DraftCartProductReason } from "../../types/cart";
 import { activeCartService } from "../../services";
 import { ObjectId } from "mongoose";
+import { DEFAULT_REDIS_EXPIRATION, redisClient } from "../../db/redis";
+import { cache } from "../../utils/cache";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -57,7 +59,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
     ];
   }
 
-  const andQuery: any = [{ disabled: false }];
+  const andQuery: any = [];
 
   if (brand) andQuery.push({ $eq: ["$brand._id", { $toObjectId: brand }] });
   if (category)
@@ -83,78 +85,92 @@ export const getAllProducts = async (req: Request, res: Response) => {
 
   query.$expr = { $and: andQuery };
 
-  const lookup = getAggregatedLookup([
-    { collection: "brands", fieldName: "brand", isArray: false },
-    { collection: "offers", fieldName: "offer", isArray: false },
-    { collection: "subcategories", fieldName: "subcategory", isArray: false },
-    { collection: "tags", fieldName: "tags", isArray: true },
-    { collection: "labels", fieldName: "labels", isArray: true },
-  ]);
+  const hasQuery = !!query.$or || query.$expr.$and.length > 0;
+  andQuery.push({ disabled: false });
 
-  const data = await Product.aggregate(
-    getPaginationPipline({
-      beforePipline: [
-        ...lookup,
-        {
-          $match: query,
-        },
-        { $sort: { createdAt: -1 } },
-      ],
-      skip,
-      limit,
-      dataPipline: [
-        {
-          $project: {
-            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-            description:
-              req.lang === "ar" ? "$descriptionAr" : "$descriptionEn",
-            coverList: 1,
-            rating: 1,
-            reviews: 1,
-            offer: 1,
-            brand: {
-              _id: 1,
-              name: req.lang === "ar" ? "$brand.nameAr" : "$brand.nameEn",
-            },
-            subcategory: {
-              _id: 1,
-              name:
-                req.lang === "ar"
-                  ? "$subcategory.nameAr"
-                  : "$subcategory.nameEn",
-            },
-            labels: {
-              $map: {
-                input: "$labels",
-                as: "label",
-                in: {
-                  _id: "$$label._id",
-                  name: req.lang === "ar" ? "$$label.nameAr" : "$$label.nameEn",
-                  color: "$$label.color",
-                },
-              },
-            },
-            tags: {
-              $map: {
-                input: "$tags",
-                as: "tag",
-                in: {
-                  _id: "$$tag._id",
-                  name: req.lang === "ar" ? "$$tag.nameAr" : "$$tag.nameEn",
-                },
-              },
-            },
-            quantity: 1,
-            disabled: 1,
-            price: 1,
-            finalPrice: 1,
+  const cb = async () => {
+    const lookup = getAggregatedLookup([
+      { collection: "brands", fieldName: "brand", isArray: false },
+      { collection: "offers", fieldName: "offer", isArray: false },
+      { collection: "subcategories", fieldName: "subcategory", isArray: false },
+      { collection: "tags", fieldName: "tags", isArray: true },
+      { collection: "labels", fieldName: "labels", isArray: true },
+    ]);
+
+    const data = await Product.aggregate(
+      getPaginationPipline({
+        beforePipline: [
+          ...lookup,
+          {
+            $match: query,
           },
-        },
-      ],
-    })
-  );
+          { $sort: { createdAt: -1 } },
+        ],
+        skip,
+        limit,
+        dataPipline: [
+          {
+            $project: {
+              name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+              description:
+                req.lang === "ar" ? "$descriptionAr" : "$descriptionEn",
+              coverList: 1,
+              rating: 1,
+              reviews: 1,
+              offer: 1,
+              brand: {
+                _id: 1,
+                name: req.lang === "ar" ? "$brand.nameAr" : "$brand.nameEn",
+              },
+              subcategory: {
+                _id: 1,
+                name:
+                  req.lang === "ar"
+                    ? "$subcategory.nameAr"
+                    : "$subcategory.nameEn",
+              },
+              labels: {
+                $map: {
+                  input: "$labels",
+                  as: "label",
+                  in: {
+                    _id: "$$label._id",
+                    name:
+                      req.lang === "ar" ? "$$label.nameAr" : "$$label.nameEn",
+                    color: "$$label.color",
+                  },
+                },
+              },
+              tags: {
+                $map: {
+                  input: "$tags",
+                  as: "tag",
+                  in: {
+                    _id: "$$tag._id",
+                    name: req.lang === "ar" ? "$$tag.nameAr" : "$$tag.nameEn",
+                  },
+                },
+              },
+              quantity: 1,
+              disabled: 1,
+              price: 1,
+              finalPrice: 1,
+            },
+          },
+        ],
+      })
+    );
 
-  res.status(StatusCodes.OK).json(data[0] || emptyPaginationList(skip, limit));
+    return data[0] || emptyPaginationList(skip, limit);
+  };
+
+  if (hasQuery) {
+    const data = await cb();
+    res.status(StatusCodes.OK).json(data);
+  } else {
+    const data = await cache(`products?skip=${skip}&limit=${limit}`, cb);
+    res.status(StatusCodes.OK).json(data);
+  }
 };
 
 // Staff get all products
@@ -249,72 +265,75 @@ export const getAllProductsForStaff = async (req: Request, res: Response) => {
 
 // Public get single product
 export const getProduct = async (req: Request, res: Response) => {
-  const product = await Product.findById(req.params.id)
-    .select({
-      name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-      description: req.lang === "ar" ? "$descriptionAr" : "$descriptionEn",
-      coverList: 1,
-      rating: 1,
-      reviews: 1,
-      offer: 1,
-      brand: 1,
-      subcategory: 1,
-      labels: 1,
-      tags: 1,
-      quantity: 1,
-      disabled: 1,
-      price: 1,
-      finalPrice: 1,
-    })
-    .select("-createdAt -updatedAt")
-    .populate([
-      {
-        path: "brand",
-        select: {
-          name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-          cover: 1,
-        },
-      },
-      {
-        path: "subcategory",
-        select: {
-          name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-          cover: 1,
-          category: 1,
-        },
-        populate: {
-          path: "category",
+  const cb = async () => {
+    const product = await Product.findById(req.params.id)
+      .select({
+        name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+        description: req.lang === "ar" ? "$descriptionAr" : "$descriptionEn",
+        coverList: 1,
+        rating: 1,
+        reviews: 1,
+        offer: 1,
+        brand: 1,
+        subcategory: 1,
+        labels: 1,
+        tags: 1,
+        quantity: 1,
+        disabled: 1,
+        price: 1,
+        finalPrice: 1,
+      })
+      .select("-createdAt -updatedAt")
+      .populate([
+        {
+          path: "brand",
           select: {
             name: req.lang === "ar" ? "$nameAr" : "$nameEn",
             cover: 1,
           },
         },
-      },
-      {
-        path: "labels",
-        select: {
-          name: req.lang === "ar" ? "$nameAr" : "$nameEn",
-          color: 1,
+        {
+          path: "subcategory",
+          select: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+            cover: 1,
+            category: 1,
+          },
+          populate: {
+            path: "category",
+            select: {
+              name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+              cover: 1,
+            },
+          },
         },
-      },
-      {
-        path: "tags",
-        select: {
-          name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+        {
+          path: "labels",
+          select: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+            color: 1,
+          },
         },
-      },
-      {
-        path: "offer",
-        select: {
-          name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+        {
+          path: "tags",
+          select: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+          },
         },
-      },
-    ]);
+        {
+          path: "offer",
+          select: {
+            name: req.lang === "ar" ? "$nameAr" : "$nameEn",
+          },
+        },
+      ]);
 
-  if (!product)
-    throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
+    if (!product)
+      throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
+    return product;
+  };
 
-  res.status(StatusCodes.OK).json(product);
+  res.status(StatusCodes.OK).json(await cache(`products:${req.params.id}`, cb));
 };
 
 // Staff get single product

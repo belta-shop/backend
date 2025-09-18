@@ -7,6 +7,7 @@ import { ErrorHandler } from "./middleware/error-handler";
 import { languageMiddleware } from "./middleware/language";
 import cors from "cors";
 import bodyParser from "body-parser";
+import { redisClient } from "./db/redis";
 
 const app = express();
 const port = process.env.PORT || 5006;
@@ -27,14 +28,24 @@ app.use(ErrorHandler);
 
 async function start() {
   try {
+    // MongoDB
     console.log("Connecting to database...");
     await connectDb(process.env.MONGO_URI!);
     console.log("Connected to database");
+
+    // Redis
+    console.log("Connecting to in-memory database...");
+    await redisClient.connect();
+    redisClient.on("error", (err) => {
+      throw new Error(err.message);
+    });
+    console.log("Connected to in-memory database");
+
     return app.listen(port, () => {
       console.log(`Server is listening on port ${port}`);
     });
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 }
 
