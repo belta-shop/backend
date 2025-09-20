@@ -17,6 +17,7 @@ import {
 import { activeCartService } from "../../services";
 import { DraftCartProductReason } from "../../types/cart";
 import { ObjectId } from "mongoose";
+import { addJobToRemoveProductFromCarts } from "../../workers/remove-product-from-carts";
 
 // Get all offers (staff only)
 export const getAllOffers = async (req: Request, res: Response) => {
@@ -168,10 +169,10 @@ export const updateOffer = async (req: Request, res: Response) => {
 
   // Update products in active carts
   for (const productId of productsToRemoveFromCarts) {
-    await activeCartService.moveProductToDraft({
-      productId: productId.toString(),
-      reason: DraftCartProductReason.PriceChange,
-    });
+    addJobToRemoveProductFromCarts(
+      productId.toString(),
+      DraftCartProductReason.PriceChange
+    );
   }
 };
 

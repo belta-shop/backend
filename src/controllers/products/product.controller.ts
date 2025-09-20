@@ -18,12 +18,8 @@ import {
 import Offer from "../../models/products/offer.model";
 import { ObjectId } from "mongoose";
 import { cache } from "../../utils/cache";
-import { Worker } from "node:worker_threads";
-import path from "node:path";
-
-// let worker = new Worker(
-//   path.join(__dirname, "../../workers/remove-product-from-orders.js")
-// );
+import { addJobToRemoveProductFromCarts } from "../../workers/remove-product-from-carts";
+import { DraftCartProductReason } from "../../types/cart";
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -401,9 +397,9 @@ export const updateProduct = async (req: Request, res: Response) => {
 
   // Update products in active carts
   if (newFinalPrice !== oldFinalPrice) {
-    new Worker(
-      path.join(__dirname, "../../workers/remove-product-from-orders.js"),
-      { workerData: { productId: (product._id as ObjectId).toString() } }
+    addJobToRemoveProductFromCarts(
+      (product._id as ObjectId).toString(),
+      DraftCartProductReason.PriceChange
     );
     console.log("after change price");
   }

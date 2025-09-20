@@ -22,6 +22,8 @@
   "dependencies": {
     "@azure/identity": "^4.10.1",
     "@azure/storage-blob": "^12.27.0",
+    "@bull-board/api": "^6.13.0",
+    "@bull-board/express": "^6.13.0",
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
@@ -31,6 +33,7 @@
     "@types/nodemailer": "^6.4.17",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
+    "bullmq": "^5.58.7",
     "concurrently": "^9.1.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

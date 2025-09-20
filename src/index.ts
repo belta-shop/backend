@@ -8,6 +8,7 @@ import { languageMiddleware } from "./middleware/language";
 import cors from "cors";
 import bodyParser from "body-parser";
 import { redisClient } from "./db/redis";
+import { bullBoardRouter } from "./routes/bull-board-router";
 
 const app = express();
 const port = process.env.PORT || 5006;
@@ -26,20 +27,20 @@ app.get("/", (_, req) => {
 // error handler
 app.use(ErrorHandler);
 
+app.use("/admin/bull-board", bullBoardRouter);
+
 async function start() {
   try {
     // MongoDB
-    console.log("Connecting to database...");
     await connectDb(process.env.MONGO_URI!);
-    console.log("Connected to database");
+    console.log("Connected to MongodDB");
 
     // Redis
-    console.log("Connecting to in-memory database...");
     await redisClient.connect();
     redisClient.on("error", (err) => {
       throw new Error(err.message);
     });
-    console.log("Connected to in-memory database");
+    console.log("Connected to Redis");
 
     return app.listen(port, () => {
       console.log(`Server is listening on port ${port}`);
