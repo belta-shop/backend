@@ -185,7 +185,7 @@ export const moveProductToDraft = async ({
   productId,
   reason,
 }: {
-  productId: ObjectId;
+  productId: string;
   reason: DraftCartProductReason;
 }) => {
   const product = await Product.findById(productId);

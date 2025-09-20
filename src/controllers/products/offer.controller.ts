@@ -169,7 +169,7 @@ export const updateOffer = async (req: Request, res: Response) => {
   // Update products in active carts
   for (const productId of productsToRemoveFromCarts) {
     await activeCartService.moveProductToDraft({
-      productId,
+      productId: productId.toString(),
       reason: DraftCartProductReason.PriceChange,
     });
   }

@@ -8,7 +8,7 @@ import {
 } from "../../utils/routes";
 import SubCategory from "../../models/products/sub-category.model";
 import Brand from "../../models/products/brand.model";
-import { IOffer } from "../../types/products";
+import { IOffer, IProduct } from "../../types/products";
 import CustomError from "../../errors/custom-error";
 import {
   emptyPaginationList,
@@ -16,11 +16,14 @@ import {
   getPaginationPipline,
 } from "../../utils/models";
 import Offer from "../../models/products/offer.model";
-import { DraftCartProductReason } from "../../types/cart";
-import { activeCartService } from "../../services";
 import { ObjectId } from "mongoose";
-import { DEFAULT_REDIS_EXPIRATION, redisClient } from "../../db/redis";
 import { cache } from "../../utils/cache";
+import { Worker } from "node:worker_threads";
+import path from "node:path";
+
+// let worker = new Worker(
+//   path.join(__dirname, "../../workers/remove-product-from-orders.js")
+// );
 
 // Public get all products
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -368,7 +371,7 @@ export const createProduct = async (req: Request, res: Response) => {
 
 // Update product (staff only)
 export const updateProduct = async (req: Request, res: Response) => {
-  const product = await Product.findById(req.params.id);
+  const product = (await Product.findById(req.params.id)) as IProduct;
   if (!product)
     throw new CustomError("Product not found", StatusCodes.NOT_FOUND);
 
@@ -398,10 +401,11 @@ export const updateProduct = async (req: Request, res: Response) => {
 
   // Update products in active carts
   if (newFinalPrice !== oldFinalPrice) {
-    await activeCartService.moveProductToDraft({
-      productId: product._id as ObjectId,
-      reason: DraftCartProductReason.PriceChange,
-    });
+    new Worker(
+      path.join(__dirname, "../../workers/remove-product-from-orders.js"),
+      { workerData: { productId: (product._id as ObjectId).toString() } }
+    );
+    console.log("after change price");
   }
 };
 
