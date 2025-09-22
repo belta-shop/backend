@@ -3,6 +3,16 @@ name: Docker Image CI
 on:
   push:
     branches: ["main"]
+    paths:
+      - "Dockerfile"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".dockerignore"
+      - ".gitignore"
+      - ".env"
+      - "src/**"
+      - "public/**"
+      - "tsconfig.json"
 
 jobs:
   build:
