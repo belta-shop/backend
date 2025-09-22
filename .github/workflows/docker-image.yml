@@ -9,7 +9,6 @@ on:
       - "pnpm-lock.yaml"
       - ".dockerignore"
       - ".gitignore"
-      - ".env"
       - "src/**"
       - "public/**"
       - "tsconfig.json"
