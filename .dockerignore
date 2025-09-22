@@ -1,0 +1,6 @@
+dist
+node_modules
+README.md
+.env
+.gitignore
+Procfile

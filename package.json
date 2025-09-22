@@ -3,27 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "engines": {
-    "node": "22.11.0",
-    "pnpm": "9.15.0"
-  },
   "scripts": {
     "build": "rimraf dist && tsc",
-    "prestart": "npm run build",
     "start": "node dist/index.js",
-    "dev": "NODE_ENV=development npx nodemon src/index.ts"
+    "dev": "NODE_ENV=development nodemon src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^3.1.10"
-  },
-  "dependencies": {
-    "@azure/identity": "^4.10.1",
-    "@azure/storage-blob": "^12.27.0",
-    "@bull-board/api": "^6.13.0",
-    "@bull-board/express": "^6.13.0",
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
@@ -31,10 +19,20 @@
     "@types/multer": "^1.4.13",
     "@types/node": "^22.15.21",
     "@types/nodemailer": "^6.4.17",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.10",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.10.1",
+    "@azure/storage-blob": "^12.27.0",
+    "@bull-board/api": "^6.13.0",
+    "@bull-board/express": "^6.13.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "bullmq": "^5.58.7",
-    "concurrently": "^9.1.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -45,13 +43,9 @@
     "mongodb": "^6.16.0",
     "mongoose": "^8.14.0",
     "multer": "^2.0.1",
-    "node": "22.11.0",
     "nodemailer": "^7.0.3",
     "redis": "^5.8.2",
-    "rimraf": "^6.0.1",
     "stripe": "^18.3.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
     "uuid": "^11.1.0"
   }
 }
