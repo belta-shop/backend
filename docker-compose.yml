@@ -1,0 +1,11 @@
+services:
+  backend:
+    build: .
+    image: beltashop-backend
+    dns: 8.8.8.8
+    ports:
+      - 5006:5006
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
