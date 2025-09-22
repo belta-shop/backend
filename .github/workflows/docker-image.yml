@@ -13,5 +13,6 @@ jobs:
       - name: Build the Docker image
         run: docker build . --file Dockerfile --tag imbeltagy/beltashop-backend:latest
       - name: Push the Docker image
-        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        run: docker push imbeltagy/beltashop-backend:latest
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker push imbeltagy/beltashop-backend:latest
