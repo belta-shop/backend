@@ -6,7 +6,10 @@
   "scripts": {
     "build": "rimraf dist && tsc",
     "start": "node dist/index.js",
-    "dev": "NODE_ENV=development nodemon src/index.ts"
+    "dev": "NODE_ENV=development nodemon src/index.ts",
+    "docker:build": "docker build . -t imbeltagy/beltashop-backend",
+    "docker:run": "docker run --dns 8.8.8.8 --env-file .env -p 5006:5006 imbeltagy/beltashop-backend",
+    "docker:push": "docker push imbeltagy/beltashop-backend"
   },
   "keywords": [],
   "author": "",
