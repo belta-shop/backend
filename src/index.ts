@@ -9,6 +9,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import { redisClient } from "./db/redis";
 import { bullBoardRouter } from "./routes/bull-board-router";
+import { io } from "./db/socket";
 
 const app = express();
 const port = process.env.PORT || 5006;
@@ -42,9 +43,12 @@ async function start() {
     });
     console.log("Connected to Redis");
 
-    return app.listen(port, () => {
+    const server = app.listen(port, () => {
       console.log(`Server is listening on port ${port}`);
     });
+    io.attach(server);
+
+    return server;
   } catch (error) {
     throw error;
   }

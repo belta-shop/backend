@@ -3,6 +3,7 @@ import { activeCartService, orderService } from "../../services";
 import CustomError from "../../errors/custom-error";
 import { StatusCodes } from "http-status-codes";
 import { stripe } from "../../utils/stripe";
+import { adminNamespace } from "../../db/socket";
 
 export const createCheckoutSession = async (req: Request, res: Response) => {
   const cart = await activeCartService.getCart({
@@ -71,10 +72,11 @@ export const successCheckoutSession = async (req: Request, res: Response) => {
     if (!session.metadata?.userId)
       throw new CustomError("Unauthorized", StatusCodes.UNAUTHORIZED);
 
-    await orderService.placeOrder({
+    const order = await orderService.placeOrder({
       userId: session.metadata.userId,
       sessionId: sessionId,
     });
+    adminNamespace.emit("new order", { orderId: order._id });
 
     res.status(StatusCodes.TEMPORARY_REDIRECT).redirect(redirectUrl);
   } catch (error) {
