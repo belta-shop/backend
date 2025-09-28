@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import BadRequest from "../errors/bad-request";
 import ErrorAPI from "../errors/error-api";
-import User from "../models/user.model";
+import User from "../models/auth/user.model";
 import { OTPPurpose } from "../types/otp";
 import { genOTP } from "./bcrypt";
 import OTP from "../models/otp.model";

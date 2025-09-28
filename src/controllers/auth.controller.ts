@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import User from "../models/user.model";
+import User from "../models/auth/user.model";
 import { StatusCodes } from "http-status-codes";
 import ErrorAPI from "../errors/error-api";
 import { comparePassowrd, genOTP, hashPaswword } from "../utils/bcrypt";
@@ -17,16 +17,29 @@ import { sendOTPMail } from "../utils/email";
 import Unauthorized from "../errors/unauthorized";
 import Token from "../models/token.model";
 import CustomError from "../errors/custom-error";
+import UserEmail from "../models/auth/user-email.model";
 
 export const register = async (req: Request, res: Response) => {
   // Create User
-
-  if (req.body.role === "admin")
-    throw new CustomError("admin is not supported", StatusCodes.BAD_REQUEST);
+  if (!req.body.password)
+    if (req.body.role === "admin")
+      throw new CustomError("admin is not supported", StatusCodes.BAD_REQUEST);
 
   const hashed = hashPaswword(req.body.password);
-  await User.create({
+
+  const userEmail = await UserEmail.findOne({ email: req.body.email });
+  if (userEmail) {
+    throw new ErrorAPI("email_already_exists", StatusCodes.CONFLICT);
+  }
+
+  const user = await User.create({
     ...req.body,
+    provider: "email",
+  });
+
+  await UserEmail.create({
+    user: user._id,
+    email: req.body.email,
     password: hashed,
   });
 
@@ -45,20 +58,33 @@ export const login = async (
   if (!email || !password)
     throw new ErrorAPI("Invalid credentials", StatusCodes.BAD_REQUEST);
 
-  const user = await User.findOne({ email });
+  const userEmail = await UserEmail.findOne({ email });
+  if (!userEmail) {
+    throw new Unauthorized("invalid_email_or_password");
+  }
 
-  if (!user) {
-    throw new ErrorAPI("invalid_email_or_password", StatusCodes.UNAUTHORIZED);
+  if (!userEmail || !userEmail.password) {
+    throw new Unauthorized("invalid_email_or_password");
   } else {
-    if (!comparePassowrd(password, user.password)) {
-      throw new ErrorAPI("invalid_email_or_password", StatusCodes.UNAUTHORIZED);
+    if (!comparePassowrd(password, userEmail.password)) {
+      throw new Unauthorized("invalid_email_or_password");
     } else {
-      const { _id, fullName, email, confirmed, role } = user;
+      const user = await User.findById(userEmail.user);
+      if (!user) throw new Unauthorized("invalid_email_or_password");
 
-      const accessToken = signAccessToken({ id: _id.toString(), email, role });
+      const { _id, fullName, email, confirmed, role, provider, providerId } =
+        user;
+
+      const accessToken = signAccessToken({
+        id: _id.toString(),
+        email,
+        role,
+        provider,
+      });
       const refreshToken = await signRefreshToken({
         id: _id.toString(),
         email,
+        provider,
         role,
       });
 
@@ -87,9 +113,11 @@ export const login = async (
       const body = {
         _id,
         fullName,
+        provider,
         email,
-        confirmed,
+        providerId,
         role,
+        confirmed,
         accessToken,
         accessTokenExpireDate: new Date(Date.now() + 15 * 60 * 1000),
         refreshToken,
@@ -105,7 +133,7 @@ export const refreshAccessToken = async (
   req: Request<{}, {}, { token: string }>,
   res: Response
 ) => {
-  const { sub, tokenId, email, role, user } = await verifyUserToken(
+  const { sub, tokenId, user, ...payload } = await verifyUserToken(
     req.body.token
   );
 
@@ -113,17 +141,19 @@ export const refreshAccessToken = async (
 
   await Token.deleteOne({ uuid: tokenId });
 
-  const accessToken = signAccessToken({ id: sub, email, role });
-  const refreshToken = await signRefreshToken({ id: sub, email, role });
+  const accessToken = signAccessToken({ id: sub, ...payload });
+  const refreshToken = await signRefreshToken({ id: sub, ...payload });
 
-  const { _id, fullName, confirmed } = user;
+  const { _id, fullName, email, confirmed, role, provider, providerId } = user;
 
   const body = {
     _id,
     fullName,
+    provider,
     email,
-    confirmed,
+    providerId,
     role,
+    confirmed,
     accessToken,
     accessTokenExpireDate: new Date(Date.now() + 15 * 60 * 1000),
     refreshToken,
@@ -137,7 +167,12 @@ export const resendOTP = async (
   req: Request<{}, {}, { purpose: OTPPurpose }>,
   res: Response
 ) => {
-  if (!req.currentUser) throw new Unauthorized();
+  if (
+    !req.currentUser ||
+    !("email" in req.currentUser) ||
+    req.currentUser.provider !== "email"
+  )
+    throw new Unauthorized();
   const { email } = req.currentUser;
   const { purpose } = req.body;
 
@@ -158,7 +193,12 @@ export const verifyOTP = async (
   req: Request<{}, {}, { otp: string; purpose: OTPPurpose }>,
   res: Response
 ) => {
-  if (!req.currentUser) throw new Unauthorized();
+  if (
+    !req.currentUser ||
+    !("email" in req.currentUser) ||
+    req.currentUser.provider !== "email"
+  )
+    throw new Unauthorized();
   const { sub, email, role } = req.currentUser;
   const { otp, purpose } = req.body;
 
@@ -201,7 +241,12 @@ export const verifyOTP = async (
 };
 
 export const resetPassword = async (req: Request, res: Response) => {
-  if (!req.currentUser) throw new Unauthorized();
+  if (
+    !req.currentUser ||
+    !("email" in req.currentUser) ||
+    req.currentUser.provider !== "email"
+  )
+    throw new Unauthorized();
 
   const { email, purpose, tokenId } = req.currentUser;
 
@@ -211,14 +256,15 @@ export const resetPassword = async (req: Request, res: Response) => {
 
   if (purpose !== OTPPurpose.ResetPassword) throw new Unauthorized();
 
-  const user = await User.findOne({ email });
-  if (!user) throw new Unauthorized();
+  const userEmail = await UserEmail.findOne({ email });
+  if (!userEmail || !userEmail.password) throw new Unauthorized();
 
-  if (comparePassowrd(password, user.password))
+  if (comparePassowrd(password, userEmail.password))
     throw new ErrorAPI("same_password", StatusCodes.CONFLICT);
 
   const hashed = hashPaswword(req.body.password);
-  await User.updateOne({ email }, { password: hashed });
+  userEmail.password = hashed;
+  await userEmail.save();
 
   await Token.deleteOne({ uuid: tokenId });
 

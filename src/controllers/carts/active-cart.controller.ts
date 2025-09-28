@@ -8,7 +8,7 @@ import {
 } from "../../utils/models";
 import { StatusCodes } from "http-status-codes";
 import CustomError from "../../errors/custom-error";
-import User from "../../models/user.model";
+import User from "../../models/auth/user.model";
 import { activeCartService } from "../../services";
 import { Language } from "../../types/language";
 

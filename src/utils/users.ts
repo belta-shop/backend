@@ -1,6 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import CustomError from "../errors/custom-error";
-import User from "../models/user.model";
+import User from "../models/auth/user.model";
 
 export const checkIfClient = async (userId: string, role?: string) => {
   let currentRole = role;

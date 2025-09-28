@@ -1,6 +1,6 @@
 import jwt, { SignOptions, VerifyOptions } from "jsonwebtoken";
 import { UserJWTPayload } from "../types/auth";
-import User from "../models/user.model";
+import User from "../models/auth/user.model";
 import Unauthorized from "../errors/unauthorized";
 
 import { v4 as uuidv4 } from "uuid";
@@ -17,16 +17,17 @@ export function signToken(data: any, options?: SignOptions) {
 
 export function signAccessToken({
   id,
-  email,
   role,
+  provider,
   ...payload
 }: {
   id: string;
-  email: string;
   role: string;
-} & Record<string, any>) {
+  provider: string;
+} & Record<string, any> &
+  ({ email: string } | { providerId: string })) {
   return signToken(
-    { sub: id, email, role, ...payload },
+    { sub: id, role, provider, ...payload },
     {
       expiresIn: `${ACCESS_TOKEN_EXPIRE_TIME}ms`,
     }
@@ -35,17 +36,19 @@ export function signAccessToken({
 
 export async function signRefreshToken({
   id,
-  email,
   role,
+  provider,
+  ...payload
 }: {
   id: string;
-  email: string;
   role: string;
-}) {
+  provider: string;
+} & Record<string, any> &
+  ({ email: string } | { providerId: string })) {
   const tokenId = uuidv4();
 
   const token = signToken(
-    { sub: id, tokenId, email, role },
+    { sub: id, tokenId, role, provider, ...payload },
     {
       expiresIn: `${REFRESH_TOKEN_EXPIRE_TIME}ms`,
     }
@@ -92,11 +95,12 @@ export async function verifyToken<ExpectedPayload>(
   options?: VerifyOptions
 ): Promise<ExpectedPayload | null> {
   try {
-    return jwt.verify(
+    const { iat, exp, ...payload } = jwt.verify(
       token,
       process.env.JWT_SECRET!,
       options
-    ) as ExpectedPayload;
+    ) as { iat: number; exp: number } & ExpectedPayload;
+    return payload as ExpectedPayload;
   } catch (e) {
     return null;
   }
@@ -106,7 +110,8 @@ export async function verifyUserToken(token: string) {
   const payload = await verifyToken<UserJWTPayload>(token);
   if (!payload) throw new Unauthorized();
 
-  const { sub: id, tokenId, email, role } = payload;
+  const { sub: id, tokenId, role, provider } = payload;
+  if (!provider) throw new Unauthorized();
 
   // if it has a uuid, check if it still valid
   if (tokenId) {
@@ -114,9 +119,15 @@ export async function verifyUserToken(token: string) {
     if (!dbToken || dbToken.value !== token) throw new Unauthorized();
   }
 
-  const user = await User.findById(id).select("-password");
-  if (!user || user.email !== email || user.role !== role)
+  const user = await User.findById(id);
+  if (
+    !user ||
+    user.role !== role ||
+    user.provider !== provider ||
+    ("email" in payload && user.email !== payload.email) ||
+    ("providerId" in payload && user.providerId !== payload.providerId)
+  )
     throw new Unauthorized();
 
-  return { ...payload, user };
+  return { ...payload, user: user.toObject() };
 }

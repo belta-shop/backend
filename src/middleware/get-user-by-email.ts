@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../models/user.model";
+import User from "../models/auth/user.model";
 import { StatusCodes } from "http-status-codes";
 import ErrorAPI from "../errors/error-api";
 
@@ -16,6 +16,7 @@ export const getUserByEmailMiddleware = async (
     email,
     sub: user._id.toString(),
     role: user.role,
+    provider: user.provider,
   };
 
   next();

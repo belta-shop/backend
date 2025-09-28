@@ -401,7 +401,6 @@ export const updateProduct = async (req: Request, res: Response) => {
       (product._id as ObjectId).toString(),
       DraftCartProductReason.PriceChange
     );
-    console.log("after change price");
   }
 };
 

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import "express-async-errors";
+import "./utils/passport";
 import { connectDb } from "./db/connect";
 import router from "./routes";
 import { ErrorHandler } from "./middleware/error-handler";
@@ -10,6 +11,9 @@ import bodyParser from "body-parser";
 import { redisClient } from "./db/redis";
 import { bullBoardRouter } from "./routes/bull-board-router";
 import { io } from "./db/socket";
+import passport from "passport";
+import { RedisStore } from "connect-redis";
+import session from "express-session";
 
 const app = express();
 const port = process.env.PORT || 5006;
@@ -19,16 +23,27 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 app.use(languageMiddleware);
-app.use(router);
 
+// Session
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET!,
+    resave: false,
+    saveUninitialized: false,
+    store: new RedisStore({ client: redisClient }),
+  })
+);
+app.use(passport.authenticate("session"));
+
+// Routes
+app.use(router);
 app.get("/", (_, req) => {
   req.status(200).end("<body><h1>Welcome to Belta Shop!</h1></body>");
 });
+app.use("/admin/bull-board", bullBoardRouter);
 
 // error handler
 app.use(ErrorHandler);
-
-app.use("/admin/bull-board", bullBoardRouter);
 
 async function start() {
   try {
