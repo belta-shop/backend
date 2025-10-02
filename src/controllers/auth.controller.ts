@@ -72,11 +72,35 @@ export const registerGithub = async (req: Request, res: Response) => {
     provider: "github",
   });
 
-  res
-    .json({
-      success: true,
-    })
-    .status(StatusCodes.CREATED);
+  const { _id, fullName, confirmed, role, provider } = user;
+
+  const accessToken = signAccessToken({
+    id: _id.toString(),
+    role,
+    provider,
+    providerId: req.body.providerId,
+  });
+  const refreshToken = await signRefreshToken({
+    id: _id.toString(),
+    provider,
+    role,
+    providerId: req.body.providerId,
+  });
+
+  const body = {
+    _id,
+    fullName,
+    email: null,
+    role,
+    confirmed,
+    provider,
+    accessToken,
+    accessTokenExpireDate: new Date(Date.now() + 15 * 60 * 1000),
+    refreshToken,
+    refreshTokenExpireDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  };
+
+  res.status(StatusCodes.OK).json(body);
 };
 
 export const login = async (
@@ -144,6 +168,7 @@ export const login = async (
         email,
         role,
         confirmed,
+        provider,
         accessToken,
         accessTokenExpireDate: new Date(Date.now() + 15 * 60 * 1000),
         refreshToken,
@@ -165,7 +190,12 @@ export const githubCallback = async (req: Request, res: Response) => {
   } = JSON.parse(req.query.state);
 
   try {
-    const profile = req.user as GitHubProfile;
+    const sessionUser = req.user as GitHubProfile;
+    const profile = {
+      fullName: sessionUser.fullName,
+      providerId: sessionUser.providerId,
+      provider: sessionUser.provider,
+    };
     if (!profile) throw new Error("Failed to authenticate");
 
     let userProvider = await UserProvider.findOne({
@@ -208,7 +238,7 @@ export const refreshAccessToken = async (
   const accessToken = signAccessToken({ id: sub, ...payload });
   const refreshToken = await signRefreshToken({ id: sub, ...payload });
 
-  const { _id, fullName, email, confirmed, role } = user;
+  const { _id, fullName, email, confirmed, role, provider } = user;
 
   const body = {
     _id,
@@ -216,6 +246,7 @@ export const refreshAccessToken = async (
     email,
     role,
     confirmed,
+    provider,
     accessToken,
     accessTokenExpireDate: new Date(Date.now() + 15 * 60 * 1000),
     refreshToken,
