@@ -18,12 +18,15 @@ import Unauthorized from "../errors/unauthorized";
 import Token from "../models/token.model";
 import CustomError from "../errors/custom-error";
 import UserEmail from "../models/auth/user-email.model";
+import { GitHubProfile } from "../types/auth";
+import UserProvider from "../models/auth/user-provider.model";
 
 export const register = async (req: Request, res: Response) => {
   // Create User
-  if (!req.body.password)
-    if (req.body.role === "admin")
-      throw new CustomError("admin is not supported", StatusCodes.BAD_REQUEST);
+  if (!req.body.password) throw new BadRequest("password is required");
+
+  if (req.body.role === "admin")
+    throw new CustomError("admin is not supported", StatusCodes.BAD_REQUEST);
 
   const hashed = hashPaswword(req.body.password);
 
@@ -41,6 +44,32 @@ export const register = async (req: Request, res: Response) => {
     user: user._id,
     email: req.body.email,
     password: hashed,
+  });
+
+  res
+    .json({
+      success: true,
+    })
+    .status(StatusCodes.CREATED);
+};
+
+export const registerGithub = async (req: Request, res: Response) => {
+  // Create User
+  if (!req.body.providerId && !req.body.fullName)
+    throw new BadRequest("providerId and fullName are required");
+
+  const user = await User.create({
+    fullName: req.body.fullName,
+    providerId: req.body.providerId,
+    provider: "github",
+    role: "client",
+    confirmed: true,
+  });
+
+  await UserProvider.create({
+    user: user._id,
+    providerId: req.body.providerId,
+    provider: "github",
   });
 
   res
@@ -72,8 +101,7 @@ export const login = async (
       const user = await User.findById(userEmail.user);
       if (!user) throw new Unauthorized("invalid_email_or_password");
 
-      const { _id, fullName, email, confirmed, role, provider, providerId } =
-        user;
+      const { _id, fullName, email, confirmed, role, provider } = user;
 
       const accessToken = signAccessToken({
         id: _id.toString(),
@@ -113,9 +141,7 @@ export const login = async (
       const body = {
         _id,
         fullName,
-        provider,
         email,
-        providerId,
         role,
         confirmed,
         accessToken,
@@ -126,6 +152,44 @@ export const login = async (
 
       res.status(StatusCodes.OK).json(body);
     }
+  }
+};
+
+export const githubCallback = async (req: Request, res: Response) => {
+  if (typeof req.query.state !== "string" || !req.query.state)
+    throw new Error("Invalid state");
+  const state: {
+    newAccountUrl: string;
+    loginUrl: string;
+    failureUrl: string;
+  } = JSON.parse(req.query.state);
+
+  try {
+    const profile = req.user as GitHubProfile;
+    if (!profile) throw new Error("Failed to authenticate");
+
+    let userProvider = await UserProvider.findOne({
+      providerId: profile.providerId,
+    });
+
+    if (!userProvider) {
+      res.redirect(
+        `${state.newAccountUrl}?profile=${encodeURIComponent(
+          JSON.stringify(profile)
+        )}`
+      );
+    } else {
+      const refreshToken = await signRefreshToken({
+        id: userProvider.user.toString(),
+        providerId: userProvider.providerId,
+        provider: userProvider.provider,
+        role: "client",
+      });
+
+      res.redirect(`${state.loginUrl}?token=${refreshToken}`);
+    }
+  } catch (ignore) {
+    res.redirect(state.failureUrl);
   }
 };
 
@@ -144,14 +208,12 @@ export const refreshAccessToken = async (
   const accessToken = signAccessToken({ id: sub, ...payload });
   const refreshToken = await signRefreshToken({ id: sub, ...payload });
 
-  const { _id, fullName, email, confirmed, role, provider, providerId } = user;
+  const { _id, fullName, email, confirmed, role } = user;
 
   const body = {
     _id,
     fullName,
-    provider,
     email,
-    providerId,
     role,
     confirmed,
     accessToken,

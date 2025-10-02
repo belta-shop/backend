@@ -1,7 +1,5 @@
 import passport from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
-import User from "../models/auth/user.model";
-import UserProvider from "../models/auth/user-provider.model";
 
 const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } = process.env;
 
@@ -25,46 +23,20 @@ passport.use(
       callbackURL: "http://localhost:5006/auth/github/callback",
     },
     async function (
-      accessToken: string,
-      refreshToken: string,
+      _accessToken: string,
+      _refreshToken: string,
       profile: any,
       done: any
     ) {
-      let userId = null;
-      try {
-        const providerId = profile.id;
-        let userProvider = await UserProvider.findOne({ providerId });
-        let user = null;
-        if (!userProvider) {
-          const fullName = profile.displayName;
-          const email = profile.emails?.[0]?.value;
-          const provider = "github";
-          const role = "client";
-          const confirmed = true;
-          user = await User.create({
-            providerId,
-            fullName,
-            email,
-            provider,
-            role,
-            confirmed,
-          });
-          userId = user._id;
-          await UserProvider.create({
-            providerId,
-            user: user._id,
-            provider,
-          });
-        } else {
-          user = await User.findById(userProvider.user);
-        }
-        return done(null, user);
-      } catch (error) {
-        if (userId) {
-          await User.findByIdAndDelete(userId);
-        }
-        return done(error, null);
-      }
+      const providerId = profile.id;
+      const fullName = profile.displayName;
+      done(null, {
+        providerId,
+        fullName,
+        provider: "github",
+        role: "client",
+        confirmed: true,
+      });
     }
   )
 );
