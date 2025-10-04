@@ -1,10 +1,13 @@
 import passport from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
 
-const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } = process.env;
+const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL } =
+  process.env;
 
-if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
-  throw new Error("GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are required");
+if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET || !GITHUB_REDIRECT_URL) {
+  throw new Error(
+    "GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET or GITHUB_REDIRECT_URL is required"
+  );
 }
 
 passport.serializeUser(function (user, done) {
@@ -20,7 +23,7 @@ passport.use(
     {
       clientID: GITHUB_CLIENT_ID,
       clientSecret: GITHUB_CLIENT_SECRET,
-      callbackURL: "http://localhost:5006/auth/github/callback",
+      callbackURL: GITHUB_REDIRECT_URL,
     },
     async function (
       _accessToken: string,
